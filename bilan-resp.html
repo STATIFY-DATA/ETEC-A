@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi / Bilan — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .cles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+  .cle { background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+  .cle .l { font-size: 13px; font-weight: 600; color: var(--gris); }
+  .cle .v { font-family: var(--titre); font-size: 30px; font-weight: 600; line-height: 1.1; margin-top: 6px; letter-spacing: -0.02em; }
+  .cle .v small { font-family: var(--texte); font-size: 14px; font-weight: 500; color: var(--gris); margin-left: 4px; letter-spacing: 0; }
+  .cle .s { font-size: 12.5px; color: var(--gris); margin-top: 4px; }
+  .cle .piste { margin-top: 10px; }
+  .piste { height: 7px; border-radius: 99px; background: #E8EBE4; overflow: hidden; }
+  .piste i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .deux { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .carte h2 { margin: 0 0 8px; font-family: var(--titre); font-weight: 600; font-size: 18px; }
+  .lignes { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .lignes td { padding: 9px 4px; border-bottom: 1px solid var(--bord-doux); }
+  .lignes tr:last-child td { border-bottom: none; }
+  .lignes td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .lignes tr.retrait td:first-child { padding-left: 18px; color: var(--gris); }
+  .entete-section { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+  .entete-section .outils { display: flex; gap: 8px; flex-wrap: wrap; }
+  .entete-section input, .entete-section select { min-height: 42px; border-radius: 10px; border: 1.5px solid #D2D8CE; background: #FFFFFF; padding: 0 12px; font-size: 14px; font-family: var(--texte); }
+  .barre-av { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .barre-av .piste { flex: 1; min-width: 60px; }
+  .barre-av b { font-size: 13px; white-space: nowrap; min-width: 62px; text-align: right; }
+  .retards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+  .retards li { padding: 8px 0; border-bottom: 1px solid var(--bord-doux); font-size: 14px; }
+  .retards li:last-child { border-bottom: none; }
+  .vide { color: var(--gris); font-size: 14px; margin: 4px 0; }
+  .actions-bas { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+  @media (max-width: 900px) { .cles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .deux { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .cle .v { font-size: 24px; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Suivi / Bilan</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <section class="cles" id="cles" aria-label="Chiffres clés"></section>
+
+  <section class="deux">
+    <div class="carte"><h2>Questionnaires</h2><table class="lignes" id="t-quest"></table></div>
+    <div class="carte"><h2>Zones et qualité</h2><table class="lignes" id="t-grappes"></table></div>
+  </section>
+
+  <section class="entete-section">
+    <h2 class="section-t" id="titre-detail">Détail</h2>
+    <div class="outils">
+      <input id="recherche" type="search" placeholder="Rechercher" aria-label="Rechercher dans le détail" autocomplete="off">
+      <select id="tri" aria-label="Trier le détail">
+        <option value="nom">Trier par nom</option>
+        <option value="av">Avancement le plus faible d'abord</option>
+        <option value="av-">Avancement le plus fort d'abord</option>
+        <option value="corr">Le plus de questionnaires à corriger</option>
+      </select>
+    </div>
+  </section>
+  <section class="tableau-zone"><table class="tableau" id="t-detail"></table></section>
+
+  <section id="bloc-regions" class="cache">
+    <h2 class="section-t">Par région</h2>
+  </section>
+  <section class="tableau-zone cache" id="zone-regions"><table class="tableau" id="t-regions"></table></section>
+
+  <section class="deux">
+    <div class="carte">
+      <h2 id="titre-retards">Zones en retard</h2>
+      <div id="retards"></div>
+    </div>
+    <div class="carte">
+      <h2>Classement des enquêteurs</h2>
+      <p class="vide" style="margin-bottom:8px">Du meilleur score qualité moyen au moins bon.</p>
+      <div id="classement"></div>
+    </div>
+  </section>
+
+  <section class="actions-bas">
+    <button type="button" class="btn btn-principal" id="graphiques">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h16M7 16v-5M12 16V7M17 16v-8"/></svg>
+      Graphiques d'avancement
+    </button>
+    <button type="button" class="lien" id="classique">Voir le bilan dans les écrans classiques</button>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    var L = function (lib, a, u, e, t, v, ap, c, r) {
+      return { lib: lib, assign: a, visit: e + t + v + c + r, encours: e, term: t, valid: v, appr: ap, corr: c, rej: r, upiv: u,
+               av: a ? Math.floor(10000 * u / a) : 0, avTxt: a ? (100 * u / a).toFixed(2).replace(".", ",") + " %" : "0 %",
+               controles: v + r, rejTxt: v + r ? (100 * r / (v + r)).toFixed(2).replace(".", ",") + " %" : "0 %", scoreTxt: "84,50", dureeTxt: "41,25" };
+    };
+    d = { role: 3, agent: "SUP001", perimetre: "Toute l'enquête", total: L("Total", 8107, 3, 0, 0, 4, 3, 1, 0),
+          grappes: { assign: 812, noncom: 809, encours: 3, achev: 0 }, joursRetard: 3,
+          retards: ["Zone 020101 : jamais visitée", "Zone 020102 : aucune visite depuis 5 jours (dernière le 08/10/2026 10:12)"],
+          derniereSync: "13/10/2026 08:29", typeDetail: "Contrôleur",
+          detail: [L("CTR001", 160, 3, 0, 0, 4, 3, 1, 0), L("CTR002", 152, 0, 0, 0, 0, 0, 0, 0), L("CTR003", 148, 0, 0, 0, 0, 0, 0, 0)],
+          regions: [L("Région 01 - Adamaoua", 800, 0, 0, 0, 0, 0, 0, 0), L("Région 02 - Centre", 950, 3, 0, 0, 4, 3, 1, 0)],
+          classement: [{ rang: 1, id: "ENQ001", nbq: 4, scoreTxt: "86,25", dureeTxt: "38,50" }, { rang: 2, id: "ENQ002", nbq: 0, scoreTxt: "", dureeTxt: "" }] };
+  }
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var t = d.total || {};
+  var role = n(d.role);
+
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+  $("graphiques").addEventListener("click", function () { ETEC.fermer("GRAPHIQUES"); });
+  $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+
+  var jamais = /aucune/i.test(d.derniereSync || "");
+  $("sous-titre").textContent = (d.perimetre || "") + " · " + (jamais ? "Aucune synchronisation réussie sur cet appareil" : "Dernière synchronisation réussie : " + d.derniereSync);
+
+  /* Chiffres clés */
+  var pct = function (x) { return Math.max(0, Math.min(100, n(x) / 100)); };
+  $("cles").innerHTML = [
+    '<div class="cle"><div class="l">Structures assignées</div><div class="v">' + n(t.assign) + '</div><div class="s">' + n(t.visit) + ' questionnaire(s) commencé(s)</div></div>',
+    '<div class="cle"><div class="l">Avancement</div><div class="v">' + h(t.avTxt) + '</div><div class="s">' + n(t.upiv) + ' structure(s) validée(s)</div><div class="piste"><i style="width:' + pct(t.av) + '%"></i></div></div>',
+    '<div class="cle"><div class="l">À contrôler</div><div class="v">' + n(t.term) + '</div><div class="s">questionnaires terminés</div></div>',
+    '<div class="cle"><div class="l">Score qualité moyen</div><div class="v">' + (t.scoreTxt ? h(t.scoreTxt) + '<small>/ 100</small>' : '—') + '</div><div class="s">' + (t.scoreTxt ? '' : 'non disponible') + '</div></div>'
+  ].join("");
+
+  function lignes(rows) {
+    return rows.map(function (r) { return '<tr' + (r[2] ? ' class="retrait"' : '') + '><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join("");
+  }
+  $("t-quest").innerHTML = lignes([
+    ["Questionnaires commencés", n(t.visit)],
+    ["En cours", n(t.encours), true],
+    ["Terminés, à contrôler", n(t.term), true],
+    ["Validés", n(t.valid), true],
+    ["dont approuvés par le superviseur", n(t.appr), true],
+    ["À corriger", n(t.corr), true],
+    ["Rejetés", n(t.rej), true]
+  ]);
+  var g = d.grappes || {};
+  $("t-grappes").innerHTML = lignes([
+    ["Zones assignées", n(g.assign)],
+    ["Non commencées", n(g.noncom), true],
+    ["En cours", n(g.encours), true],
+    ["Achevées", n(g.achev), true],
+    ["Taux de rejet", n(t.controles) > 0 ? h(t.rejTxt) : "aucun contrôle"],
+    ["Durée moyenne d'un entretien", t.dureeTxt ? h(t.dureeTxt) + " min" : "non disponible"]
+  ]);
+
+  /* Détail par agent et par région */
+  var entete = function (premier) {
+    return '<thead><tr><th>' + h(premier) + '</th><th class="n">Structures</th><th>Avancement (structures validées)</th><th class="n">En cours</th><th class="n">À contrôler</th><th class="n">Validés</th><th class="n">À corriger</th><th class="n">Rejetés</th><th class="n">Score moyen</th></tr></thead>';
+  };
+  var ligneDetail = function (r) {
+    return '<tr><td><b>' + h(r.lib) + '</b></td><td class="n">' + n(r.assign) + '</td>' +
+      '<td><div class="barre-av"><div class="piste"><i style="width:' + pct(r.av) + '%"></i></div><b>' + h(r.avTxt) + '</b></div></td>' +
+      '<td class="n">' + n(r.encours) + '</td><td class="n">' + n(r.term) + '</td><td class="n">' + n(r.valid) + '</td>' +
+      '<td class="n"' + (n(r.corr) > 0 ? ' style="color:var(--orange);font-weight:700"' : '') + '>' + n(r.corr) + '</td><td class="n">' + n(r.rej) + '</td>' +
+      '<td class="n">' + (r.scoreTxt ? h(r.scoreTxt) : '—') + '</td></tr>';
+  };
+  var detail = Array.isArray(d.detail) ? d.detail : [];
+  var typeDetail = d.typeDetail || (role === 2 ? "Enquêteur" : "Contrôleur");
+  $("titre-detail").textContent = (typeDetail === "Enquêteur" ? "Par enquêteur" : "Par contrôleur") + " (" + detail.length + ")";
+  function afficherDetail() {
+    var q = $("recherche").value.trim().toUpperCase();
+    var tri = $("tri").value;
+    var l = detail.filter(function (r) { return !q || String(r.lib).toUpperCase().indexOf(q) >= 0; });
+    l.sort(function (a, b) {
+      if (tri === "av") return n(a.av) - n(b.av) || String(a.lib).localeCompare(String(b.lib));
+      if (tri === "av-") return n(b.av) - n(a.av) || String(a.lib).localeCompare(String(b.lib));
+      if (tri === "corr") return n(b.corr) - n(a.corr) || String(a.lib).localeCompare(String(b.lib));
+      return String(a.lib).localeCompare(String(b.lib));
+    });
+    $("t-detail").innerHTML = entete(typeDetail) + '<tbody>' + (l.length ? l.map(ligneDetail).join("") :
+      '<tr><td colspan="9" class="vide">' + (detail.length ? "Aucun résultat pour cette recherche." : "Aucune assignation dans votre périmètre.") + '</td></tr>') + '</tbody>';
+  }
+  $("recherche").addEventListener("input", afficherDetail);
+  $("tri").addEventListener("change", afficherDetail);
+  afficherDetail();
+
+  var regions = Array.isArray(d.regions) ? d.regions : [];
+  if (regions.length) {
+    $("bloc-regions").classList.remove("cache");
+    $("zone-regions").classList.remove("cache");
+    $("t-regions").innerHTML = entete("Région") + '<tbody>' + regions.map(ligneDetail).join("") + '</tbody>';
+  }
+
+  /* Zones en retard : les 15 premières, puis tout sur demande */
+  var r = Array.isArray(d.retards) ? d.retards : [];
+  $("titre-retards").textContent = "Zones en retard ou non commencées (" + r.length + ")";
+  function afficherRetards(tout) {
+    if (!r.length) { $("retards").innerHTML = '<p class="vide">Aucune zone en retard (plus de ' + n(d.joursRetard) + ' jours sans visite).</p>'; return; }
+    var l = tout ? r : r.slice(0, 15);
+    $("retards").innerHTML = '<ul class="retards">' + l.map(function (x) { return '<li>' + h(x) + '</li>'; }).join("") + '</ul>' +
+      (r.length > l.length ? '<button type="button" class="lien" id="tout-retards">Afficher les ' + r.length + ' zones</button>' : '');
+    var b = $("tout-retards");
+    if (b) b.addEventListener("click", function () { afficherRetards(true); });
+  }
+  afficherRetards(false);
+
+  /* Classement : les 20 premiers, puis tout sur demande */
+  var c = Array.isArray(d.classement) ? d.classement : [];
+  function afficherClassement(tout) {
+    if (!c.length) { $("classement").innerHTML = '<p class="vide">Aucun enquêteur à classer.</p>'; return; }
+    var l = tout ? c : c.slice(0, 20);
+    $("classement").innerHTML = '<div class="tableau-zone"><table class="tableau"><thead><tr><th class="n">Rang</th><th>Enquêteur</th><th class="n">Score moyen</th><th class="n">Questionnaires</th><th class="n">Durée moyenne</th></tr></thead><tbody>' +
+      l.map(function (x) {
+        return '<tr><td class="n">' + n(x.rang) + '</td><td><b>' + h(x.id) + '</b></td><td class="n">' + (x.scoreTxt ? h(x.scoreTxt) + ' / 100' : '<span class="vide">pas encore noté</span>') + '</td><td class="n">' + n(x.nbq) + '</td><td class="n">' + (x.dureeTxt ? h(x.dureeTxt) + ' min' : '—') + '</td></tr>';
+      }).join("") + '</tbody></table></div>' +
+      (c.length > l.length ? '<button type="button" class="lien" id="tout-classement">Afficher les ' + c.length + ' enquêteurs</button>' : '');
+    var b = $("tout-classement");
+    if (b) b.addEventListener("click", function () { afficherClassement(true); });
+  }
+  afficherClassement(false);
+})();
+</script>
+</body>
+</html>

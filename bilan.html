@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon bilan — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .cles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .cle { background: var(--surface); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .cle .l { font-size: 13px; font-weight: 600; color: var(--gris); }
+  .cle .v { font-family: var(--titre); font-size: 32px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+  .cle .v small { font-family: var(--texte); font-size: 14px; font-weight: 500; color: var(--gris); margin-left: 4px; letter-spacing: 0; }
+  .cle .s { font-size: 12.5px; color: var(--gris); }
+  .deux { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .tableau { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .tableau td { padding: 11px 4px; border-bottom: 1px solid var(--bord-doux); }
+  .tableau tr:last-child td { border-bottom: none; }
+  .tableau td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tableau .retrait td:first-child { padding-left: 18px; color: var(--gris); }
+  .carte h2 { margin: 0 0 8px; font-family: var(--titre); font-weight: 600; font-size: 18px; }
+  .retards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .retards li { padding: 10px 12px; border-radius: 10px; background: var(--orange-doux); color: var(--orange-texte); font-size: 14px; }
+  .ok-txt { color: #14523F; font-weight: 600; font-size: 14.5px; }
+  @media (max-width: 640px) { .cles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cle .v { font-size: 26px; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Mon bilan</h1>
+    <p id="sous-titre"></p>
+  </section>
+  <section class="cles" id="cles" aria-label="Chiffres clés"></section>
+  <section class="deux">
+    <div class="carte"><h2>Mes questionnaires</h2><table class="tableau" id="t-quest"></table></div>
+    <div class="carte"><h2>Mes zones</h2><table class="tableau" id="t-grappes"></table></div>
+  </section>
+  <section class="deux">
+    <div class="carte"><h2>Qualité</h2><table class="tableau" id="t-qualite"></table></div>
+    <div class="carte"><h2 id="titre-retards">Zones en retard</h2><div id="retards"></div></div>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    d = { agent: "ENQ001", assignees: 15, visites: 13, enCours: 2, termines: 2, valides: 8, approuves: 3, aCorriger: 1, rejetes: 0, reste: 2, upiValidees: 8,
+          avancement: 53, rejet: 0, duree: 38, score: 86, grAssignees: 2, grNonCommencees: 0, grEnCours: 2, grAchevees: 0, joursRetard: 3,
+          retards: ["Zone 020102 : aucune visite depuis 4 jours (dernière le 05/10/2026 16:40)"], derniereSync: "08/10/2026 20:31" };
+  }
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var ind = function (v, suffixe, absent) { return n(v) >= 0 ? n(v) + suffixe : absent; };
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+
+  var jamais = /aucune/i.test(d.derniereSync || "");
+  $("sous-titre").textContent = "Enquêteur " + (d.agent || "") + " · " + (jamais ? "Aucune synchronisation réussie" : "Dernière synchronisation réussie : " + d.derniereSync);
+
+  $("cles").innerHTML = [
+    ["Structures assignées", n(d.assignees), "", ""],
+    ["Reste à faire", n(d.reste), "", "Structures pas encore commencées"],
+    ["Avancement", n(d.avancement) >= 0 ? h(d.avancementTxt !== undefined ? d.avancementTxt : n(d.avancement) + " %") : "—", "", n(d.upiValidees) + " structures validées"],
+    ["Score qualité moyen", n(d.score) >= 0 ? h(d.scoreTxt || String(n(d.score))) : "—", n(d.score) >= 0 ? "/ 100" : "", n(d.score) >= 0 ? "" : "non disponible"]
+  ].map(function (c) {
+    return '<div class="cle"><div class="l">' + c[0] + '</div><div class="v">' + c[1] + (c[2] ? '<small>' + c[2] + '</small>' : '') + '</div>' + (c[3] ? '<div class="s">' + c[3] + '</div>' : '') + '</div>';
+  }).join("");
+
+  function lignes(rows) {
+    return rows.map(function (r) { return '<tr' + (r[2] ? ' class="retrait"' : '') + '><td>' + r[0] + '</td><td>' + r[1] + '</td></tr>'; }).join("");
+  }
+  $("t-quest").innerHTML = lignes([
+    ["Questionnaires commencés", n(d.visites)],
+    ["En cours", n(d.enCours), true],
+    ["Terminés, en attente du contrôleur", n(d.termines), true],
+    ["Validés", n(d.valides), true],
+    ["dont approuvés par le superviseur", n(d.approuves), true],
+    ["À corriger", n(d.aCorriger), true],
+    ["Rejetés", n(d.rejetes), true]
+  ]);
+  $("t-grappes").innerHTML = lignes([
+    ["Zones assignées", n(d.grAssignees)],
+    ["Non commencées", n(d.grNonCommencees), true],
+    ["En cours", n(d.grEnCours), true],
+    ["Achevées", n(d.grAchevees), true]
+  ]);
+  $("t-qualite").innerHTML = lignes([
+    ["Score qualité moyen", n(d.score) >= 0 ? h(d.scoreTxt || String(n(d.score))) + " / 100" : "non disponible"],
+    ["Durée moyenne d'un entretien", n(d.duree) >= 0 ? h(d.dureeTxt || String(n(d.duree))) + " min" : "non disponible"],
+    ["Taux de rejet", n(d.rejet) >= 0 ? h(d.rejetTxt !== undefined ? d.rejetTxt : n(d.rejet) + " %") : "aucun questionnaire contrôlé"]
+  ]);
+
+  $("titre-retards").textContent = "Zones en retard (plus de " + n(d.joursRetard) + " jours sans visite)";
+  var r = Array.isArray(d.retards) ? d.retards : [];
+  $("retards").innerHTML = r.length
+    ? '<ul class="retards">' + r.map(function (x) { return '<li>' + h(x) + '</li>'; }).join("") + '</ul>'
+    : '<p class="ok-txt">Aucune zone en retard.</p>';
+})();
+</script>
+</body>
+</html>

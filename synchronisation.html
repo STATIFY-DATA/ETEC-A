@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synchroniser — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .resultat { border-radius: 16px; padding: 18px 20px; border: 1px solid var(--bord); background: var(--surface); }
+  .resultat.ok { border-color: #B8DCCF; background: #F2FAF6; }
+  .resultat.echec { border-color: #F1D3A6; background: #FFF8EF; }
+  .resultat h2 { margin: 0 0 4px; font-family: var(--titre); font-weight: 600; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+  .resultat h2 svg { width: 22px; height: 22px; flex: none; }
+  .resultat.ok h2 { color: #14523F; }
+  .resultat.echec h2 { color: var(--orange-texte); }
+  .resultat p { margin: 0 0 10px; font-size: 14.5px; }
+  .resultat ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .resultat li { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+  .resultat li i { font-style: normal; font-weight: 700; width: 18px; flex: none; text-align: center; }
+  .resultat li .det { color: var(--gris); }
+  .i-ok { color: #1F7A5C; } .i-ko { color: var(--orange); } .i-info { color: var(--bleu-texte); }
+
+  .actions { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .action { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 16px; border: 1px solid var(--bord); background: var(--surface); }
+  .action.principale { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+  .action .haut { display: flex; gap: 14px; align-items: flex-start; }
+  .action .ic { width: 46px; height: 46px; border-radius: 13px; background: var(--accent-doux); color: var(--accent); display: flex; align-items: center; justify-content: center; flex: none; }
+  .action .ic svg { width: 22px; height: 22px; }
+  .action b { display: block; font-size: 15.5px; }
+  .action p { margin: 3px 0 0; font-size: 13.5px; color: var(--gris); line-height: 1.45; }
+  .action .btn { align-self: flex-start; }
+  .reglage { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .reglage .champ { flex: 1 1 240px; }
+  .reglage .champ input { min-height: 48px; font-size: 15px; }
+  @media (max-width: 640px) { .actions { grid-template-columns: 1fr; } .action .btn { width: 100%; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Synchroniser</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <section id="resultat" class="cache" aria-live="polite"></section>
+
+  <section>
+    <h2 class="section-t">Envoyer et recevoir</h2>
+  </section>
+  <section class="actions" id="echanges"></section>
+
+  <section>
+    <h2 class="section-t">Réglages et sécurité</h2>
+  </section>
+  <section class="actions" id="reglages"></section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    d = { role: 1, agent: "ENQ001", derniereSync: "08/10/2026 20:31", urlCsweb: "https://votre-serveur.org/csweb/api", urlFtp: "",
+          resultat: { titre: "Synchronisation CSWeb", etat: "OK", message: "Synchronisation réussie.", lignes: [
+            { libelle: "Questionnaires envoyés", ok: 1, detail: "" }, { libelle: "Statuts (envoi et réception)", ok: 1, detail: "2 nouveau(x) reçu(s)" },
+            { libelle: "Journal envoyé", ok: 1, detail: "" }, { libelle: "Version", ok: 1, detail: "à jour" },
+            { libelle: "Assignations", ok: 1, detail: "0 nouvelle(s) reçue(s)" }, { libelle: "Comptes des agents", ok: 1, detail: "0 nouveau(x) reçu(s)" },
+            { libelle: "Questionnaires à corriger", ok: -1, detail: "1 (dont 1 nouveau(x) renvoi(s))" } ] } };
+  }
+  var role = Number(d.role) || 1;
+  var jamais = /aucune/i.test(d.derniereSync || "");
+  $("sous-titre").textContent = jamais ? "Aucune synchronisation réussie sur cet appareil." : "Dernière synchronisation réussie : " + d.derniereSync;
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+
+  var IC = {
+    internet: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+    bluetooth: '<path d="M7 7l10 10-5 4V3l5 4L7 17"/>',
+    recevoir: '<path d="M12 3v12M7 10l5 5 5-5M4 21h16"/>',
+    ftp: '<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/>',
+    sauvegarde: '<path d="M5 3h11l3 3v15H5z"/><path d="M8 3v6h8V3M8 21v-7h8v7"/>',
+    maj: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/>',
+    adresse: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'
+  };
+  function ic(n) { return '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[n] + '</svg></span>'; }
+
+  /* Résultat de la dernière opération */
+  var r = d.resultat;
+  if (r && typeof r === "object") {
+    var ok = r.etat === "OK";
+    var icone = ok ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 10"/></svg>'
+                   : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17.5v.5"/></svg>';
+    var lignes = (r.lignes || []).map(function (l) {
+      var m = l.ok === 1 ? '<i class="i-ok" aria-label="réussi">✓</i>' : l.ok === 0 ? '<i class="i-ko" aria-label="échec">✗</i>' : '<i class="i-info" aria-hidden="true">•</i>';
+      var det = l.ok === 0 ? "échec, sera retenté à la prochaine synchronisation" + (l.detail ? " — " + l.detail : "") : l.detail;
+      return '<li>' + m + '<span><b>' + h(l.libelle) + '</b>' + (det ? ' <span class="det">' + h(det) + '</span>' : '') + '</span></li>';
+    }).join("");
+    $("resultat").className = "resultat " + (ok ? "ok" : "echec");
+    $("resultat").innerHTML = '<h2>' + icone + h(r.titre || "Résultat") + '</h2><p>' + h(r.message || "") + '</p>' + (lignes ? '<ul>' + lignes + '</ul>' : '');
+  }
+
+  /* Opérations : mêmes options et mêmes droits que le menu classique */
+  var ech = [];
+  if (role === 1) {
+    ech.push({ code: "INTERNET", ic: "internet", t: "Envoyer et recevoir par internet", d: "Avec le serveur CSWeb. Une connexion internet est nécessaire.", principale: true });
+    ech.push({ code: "BLUETOOTH", ic: "bluetooth", t: "Avec mon contrôleur (Bluetooth)", d: "Demandez d'abord à votre contrôleur de choisir « Recevoir les données d'un agent ». Choisissez ensuite son appareil (ETEC-…) dans la liste." });
+  } else if (role === 2 || role === 4) {
+    ech.push({ code: "RECEVOIR", ic: "recevoir", t: "Recevoir les données d'un agent (Bluetooth)", d: "Votre appareil attend la connexion d'un agent de votre équipe. Sur son appareil, il choisit « ETEC-" + (d.agent || "") + " ». Gardez les deux appareils proches.", principale: true });
+    ech.push({ code: "BLUETOOTH", ic: "bluetooth", t: "Échanger avec le superviseur (Bluetooth)", d: "Demandez d'abord au superviseur de choisir « Recevoir ». Choisissez ensuite son appareil (ETEC-…) dans la liste." });
+    ech.push({ code: "INTERNET", ic: "internet", t: "Échanger avec le serveur central (internet)", d: "Avec le serveur CSWeb. Une connexion internet est nécessaire." });
+  } else {
+    ech.push({ code: "RECEVOIR", ic: "recevoir", t: "Recevoir les données d'un contrôleur (Bluetooth)", d: "Votre appareil attend la connexion d'un contrôleur. Sur son appareil, il choisit « ETEC-" + (d.agent || "") + " ».", principale: true });
+    ech.push({ code: "INTERNET", ic: "internet", t: "Synchroniser avec le serveur central (CSWeb)", d: "Une connexion internet est nécessaire." });
+    ech.push({ code: "FTP", ic: "ftp", t: "Synchroniser avec le serveur central (FTP)", d: "Avec l'adresse FTP enregistrée ci-dessous." });
+  }
+  function carte(a) {
+    return '<div class="action' + (a.principale ? ' principale' : '') + '"><div class="haut">' + ic(a.ic) + '<div><b>' + h(a.t) + '</b><p>' + h(a.d) + '</p></div></div>' +
+      '<button type="button" class="btn' + (a.principale ? ' btn-principal' : '') + '" data-code="' + a.code + '">' + (a.code === "RECEVOIR" ? "Attendre la connexion" : a.code === "SAUVEGARDE" ? "Faire la copie" : a.code === "MISE_A_JOUR" ? "Vérifier les mises à jour" : "Lancer") + '</button></div>';
+  }
+  $("echanges").innerHTML = ech.map(carte).join("");
+
+  var reg = [];
+  reg.push('<div class="action"><div class="haut">' + ic("adresse") + '<div><b>Adresse du serveur CSWeb</b><p>Exemple : https://monserveur.org/csweb/api</p></div></div>' +
+           '<div class="reglage"><label class="champ"><span class="cache">Adresse du serveur CSWeb</span><input id="url-csweb" type="url" inputmode="url" spellcheck="false" value="' + h(d.urlCsweb || "") + '"></label>' +
+           '<button type="button" class="btn" data-url="CSWEB">Enregistrer</button></div></div>');
+  if (role === 3) {
+    reg.push('<div class="action"><div class="haut">' + ic("ftp") + '<div><b>Adresse du serveur FTP</b><p>Exemple : ftp://monserveur.org/etec</p></div></div>' +
+             '<div class="reglage"><label class="champ"><span class="cache">Adresse du serveur FTP</span><input id="url-ftp" type="url" inputmode="url" spellcheck="false" value="' + h(d.urlFtp || "") + '"></label>' +
+             '<button type="button" class="btn" data-url="FTP">Enregistrer</button></div></div>');
+  }
+  reg.push(carte({ code: "SAUVEGARDE", ic: "sauvegarde", t: "Copie de sauvegarde", d: "Copie les 6 fichiers de données dans le dossier SAUVEGARDES de l'application, sur cet appareil." }));
+  reg.push(carte({ code: "MISE_A_JOUR", ic: "maj", t: "Mettre à jour l'application", d: "Vérifie sur le serveur s'il existe une nouvelle version. Une connexion internet est nécessaire." }));
+  $("reglages").innerHTML = reg.join("");
+
+  var envoye = false;
+  function envoyer(valeur, bouton) {
+    if (envoye) return;
+    envoye = ETEC.dansCSPro();
+    if (bouton) { bouton.disabled = true; bouton.innerHTML = '<span class="rond" aria-hidden="true" style="border-color:rgba(15,111,98,.25);border-top-color:#0F6F62"></span> En cours…'; }
+    ETEC.fermer(valeur);
+  }
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-code]") : null;
+    if (b) { envoyer(b.getAttribute("data-code"), b); return; }
+    var u = e.target.closest ? e.target.closest("[data-url]") : null;
+    if (u) {
+      var champ = u.getAttribute("data-url") === "FTP" ? $("url-ftp") : $("url-csweb");
+      var v = champ.value.trim().replace(/"/g, "");
+      if (!v) { champ.focus(); return; }
+      envoyer((u.getAttribute("data-url") === "FTP" ? "URL_FTP:" : "URL_CSWEB:") + v, u);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vérifier mon installation — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .resume { border-radius: 16px; padding: 18px 20px; border: 1px solid var(--bord); background: var(--surface); display: flex; gap: 14px; align-items: flex-start; }
+  .resume.ok { border-color: #B8DCCF; background: #F2FAF6; }
+  .resume.att { border-color: #F1D3A6; background: #FFF8EF; }
+  .resume b { display: block; font-family: var(--titre); font-size: 18px; font-weight: 600; }
+  .resume p { margin: 4px 0 0; font-size: 14px; color: var(--gris); }
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .carte h2 { margin: 0 0 10px; font-family: var(--titre); font-weight: 600; font-size: 17px; }
+  .lignes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+  .lignes li { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; padding: 9px 0; border-top: 1px solid var(--bord-doux); font-size: 14px; }
+  .lignes li:first-child { border-top: none; }
+  .lignes .k { color: var(--gris); flex: none; max-width: 48%; }
+  .lignes .v { text-align: right; font-weight: 600; word-break: break-word; min-width: 0; }
+  .lignes .v .sous { display: block; font-weight: 500; font-size: 12.5px; color: var(--gris); }
+  .etat { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-left: 6px; white-space: nowrap; }
+  .etat.ok { background: var(--accent-doux); color: #14523F; }
+  .etat.att { background: var(--orange-doux); color: var(--orange-texte); }
+  .etat.info { background: var(--bleu-doux); color: var(--bleu-texte); }
+  .actions-carte { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .note { font-size: 13px; color: var(--gris); margin: 8px 0 0; }
+  .rapport { width: 100%; min-height: 200px; border-radius: 12px; border: 1.5px solid #D2D8CE; padding: 12px; font-family: var(--code); font-size: 12.5px; color: var(--encre); background: #FBFBF8; resize: vertical; }
+  @media (max-width: 640px) { .grille { grid-template-columns: 1fr; } .actions-carte .btn { width: 100%; } .lignes .k { max-width: 44%; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Vérifier mon installation</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <section id="resume" class="resume"></section>
+
+  <section class="grille">
+    <div class="carte"><h2>Application</h2><ul class="lignes" id="l-appli"></ul></div>
+    <div class="carte">
+      <h2>Serveur</h2>
+      <ul class="lignes" id="l-serveur"></ul>
+      <div class="actions-carte">
+        <button type="button" class="btn" id="b-test">Tester si le serveur répond</button>
+      </div>
+      <p class="note" id="n-test"></p>
+    </div>
+    <div class="carte">
+      <h2>Données de cet appareil</h2>
+      <ul class="lignes" id="l-donnees"></ul>
+      <div class="actions-carte">
+        <button type="button" class="btn" id="b-mesure">Lire les données et mesurer</button>
+      </div>
+      <p class="note" id="n-mesure">La lecture des fichiers peut prendre quelques secondes. La page se rouvre ensuite avec les résultats.</p>
+    </div>
+    <div class="carte"><h2>Réglages de l'enquête</h2><ul class="lignes" id="l-reglages"></ul></div>
+    <div class="carte"><h2>Cet appareil</h2><ul class="lignes" id="l-appareil"></ul></div>
+  </section>
+
+  <section class="carte">
+    <h2>Rapport à envoyer en cas de problème</h2>
+    <textarea class="rapport" id="rapport" readonly></textarea>
+    <div class="actions-carte">
+      <button type="button" class="btn btn-principal" id="b-copie">Copier le rapport</button>
+      <span class="note" id="n-copie"></span>
+    </div>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    d = { version: "ETEC_A V1", versionApp: "1.0", versionQuest: "1.0", agent: "SUP001", role: 3, roleLibelle: "Superviseur général",
+          poste: "A1B2C3D4E5F6", urlCsweb: "http://localhost/csweb/api", urlProvisoire: 0, derniereSync: "08/10/2026 20:31",
+          dateDebut: 0, dateFin: 0, zoneLarge: 1, latMin: "1.60", latMax: "13.10", lonMin: "8.40", lonMax: "16.30",
+          cleParDefaut: 1, authInitPresent: 1, dateHeure: "13/10/2026 09:15:02", mesure: 1,
+          nbAssign: 8107, tAssign: "3.40", nbStatut: 5, tStatut: "0.10", nbJournal: 120, tJournal: "0.20", nbComptes: 202, tComptes: "0.30", tAccueil: "3.60" };
+  }
+  function nb(x) { var v = Number(String(x).trim()); return isNaN(v) ? 0 : v; }
+  function sec(x) { return String(x).trim().replace(".", ",") + " s"; }
+  /* La logique envoie les nombres à décimales précédés d'espaces : on les retire */
+  ["latMin", "latMax", "lonMin", "lonMax"].forEach(function (k) { if (d && d[k] !== undefined) d[k] = String(d[k]).trim(); });
+  function dateTxt(n) {
+    var s = String(nb(n));
+    return s.length === 8 ? s.slice(6, 8) + "/" + s.slice(4, 6) + "/" + s.slice(0, 4) : "";
+  }
+  function pastille(t, k) { return ' <span class="etat ' + k + '">' + h(t) + '</span>'; }
+  function ligne(k, v, etat, sous) {
+    return '<li><span class="k">' + h(k) + '</span><span class="v">' + h(v) + (etat ? pastille(etat[0], etat[1]) : '') +
+           (sous ? '<span class="sous">' + h(sous) + '</span>' : '') + '</span></li>';
+  }
+  var aRegler = [];     /* points à régler avant le terrain */
+  var rapport = [];     /* lignes du rapport texte */
+  function note(titre) { rapport.push(""); rapport.push("[" + titre + "]"); }
+  function rap(k, v) { rapport.push(k + " : " + v); }
+
+  $("sous-titre").textContent = "Contrôle fait le " + (d.dateHeure || "");
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+
+  rapport.push("RAPPORT ETEC_A — " + (d.dateHeure || ""));
+
+  /* Application */
+  note("Application");
+  $("l-appli").innerHTML =
+    ligne("Version de l'application", d.version) +
+    ligne("Version attendue (application / questionnaire)", d.versionApp + " / " + d.versionQuest) +
+    ligne("Agent connecté", d.agent, null, d.roleLibelle) +
+    ligne("Identifiant de l'appareil", d.poste);
+  rap("Version", d.version); rap("Versions attendues", d.versionApp + " / " + d.versionQuest);
+  rap("Agent", d.agent + " (" + d.roleLibelle + ")"); rap("Appareil", d.poste);
+
+  /* Serveur */
+  note("Serveur");
+  var provisoire = nb(d.urlProvisoire) === 1;
+  if (provisoire) aRegler.push("Adresse du serveur provisoire");
+  var jamais = /aucune/i.test(d.derniereSync || "");
+  $("l-serveur").innerHTML =
+    ligne("Adresse enregistrée", d.urlCsweb || "(aucune)", provisoire ? ["À régler : adresse provisoire", "att"] : ["Enregistrée", "ok"]) +
+    ligne("Dernière synchronisation", jamais ? "Aucune" : d.derniereSync, jamais ? ["Jamais synchronisé", "info"] : null) +
+    ligne("Serveur joignable", "Pas encore testé", null);
+  rap("Adresse du serveur", d.urlCsweb + (provisoire ? " (provisoire)" : ""));
+  rap("Dernière synchronisation", d.derniereSync);
+
+  /* Données */
+  note("Données de cet appareil");
+  var mesure = nb(d.mesure) === 1;
+  if (mesure) {
+    $("l-donnees").innerHTML =
+      ligne("Assignations (structures)", String(nb(d.nbAssign)), null, "lues en " + sec(d.tAssign)) +
+      ligne("Questionnaires suivis (statuts)", String(nb(d.nbStatut)), null, "lus en " + sec(d.tStatut)) +
+      ligne("Événements du journal", String(nb(d.nbJournal)), null, "lus en " + sec(d.tJournal)) +
+      ligne("Comptes des agents", String(nb(d.nbComptes)), null, "lus en " + sec(d.tComptes)) +
+      ligne("Préparation de l'accueil", sec(d.tAccueil), nb(String(d.tAccueil).replace(",", ".")) > 5 ? ["Lent", "att"] : ["Normal", "ok"]);
+    rap("Assignations", nb(d.nbAssign) + " (" + sec(d.tAssign) + ")");
+    rap("Statuts", nb(d.nbStatut) + " (" + sec(d.tStatut) + ")");
+    rap("Journal", nb(d.nbJournal) + " (" + sec(d.tJournal) + ")");
+    rap("Comptes", nb(d.nbComptes) + " (" + sec(d.tComptes) + ")");
+    rap("Préparation de l'accueil", sec(d.tAccueil));
+    $("b-mesure").textContent = "Mesurer de nouveau";
+    $("n-mesure").textContent = "Les temps sont mesurés à la seconde près environ. Si un temps dépasse 10 secondes, notez-le dans le rapport.";
+  } else {
+    $("l-donnees").innerHTML = ligne("Assignations, statuts, journal, comptes", "Pas encore lus", ["Appuyez sur « Lire les données »", "info"]);
+    rap("Données", "pas encore lues");
+  }
+
+  /* Réglages de l'enquête */
+  note("Réglages de l'enquête");
+  var debut = dateTxt(d.dateDebut), fin = dateTxt(d.dateFin);
+  var dates = !!debut && !!fin;
+  if (!dates) aRegler.push("Dates de l'enquête");
+  if (nb(d.zoneLarge) === 1) aRegler.push("Zone GPS trop large");
+  if (nb(d.cleParDefaut) === 1) aRegler.push("Clé de déblocage par défaut");
+  if (nb(d.authInitPresent) === 1) aRegler.push("Fichier des comptes de départ présent");
+  $("l-reglages").innerHTML =
+    ligne("Dates de l'enquête", dates ? debut + " au " + fin : "Non enregistrées", dates ? ["Enregistrées", "ok"] : ["À régler : contrôle A06 inactif", "att"]) +
+    ligne("Zone GPS (latitude / longitude)", d.latMin + " à " + d.latMax + " / " + d.lonMin + " à " + d.lonMax,
+          nb(d.zoneLarge) === 1 ? ["À régler : tout le Cameroun", "att"] : ["Précisée", "ok"]) +
+    ligne("Clé de déblocage", nb(d.cleParDefaut) === 1 ? "Valeur de départ" : "Modifiée", nb(d.cleParDefaut) === 1 ? ["À changer avant le terrain", "att"] : ["Modifiée", "ok"]) +
+    ligne("Fichier des comptes de départ", nb(d.authInitPresent) === 1 ? "Présent" : "Absent", nb(d.authInitPresent) === 1 ? ["À retirer des téléphones", "att"] : ["Absent", "ok"]);
+  rap("Dates de l'enquête", dates ? debut + " au " + fin : "non enregistrées");
+  rap("Zone GPS", d.latMin + "/" + d.latMax + " ; " + d.lonMin + "/" + d.lonMax + (nb(d.zoneLarge) === 1 ? " (tout le Cameroun)" : ""));
+  rap("Clé de déblocage", nb(d.cleParDefaut) === 1 ? "valeur de départ" : "modifiée");
+  rap("Fichier des comptes de départ", nb(d.authInitPresent) === 1 ? "présent" : "absent");
+
+  /* Appareil (lu depuis la page) */
+  note("Cet appareil");
+  var ecran = (window.screen ? window.screen.width + " × " + window.screen.height : "?");
+  var fenetre = window.innerWidth + " × " + window.innerHeight;
+  var ua = navigator.userAgent || "";
+  var tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { tz = ""; }
+  var enLigne = (typeof navigator.onLine === "boolean") ? (navigator.onLine ? "Oui" : "Non") : "Inconnu";
+  $("l-appareil").innerHTML =
+    ligne("Connexion internet", enLigne, enLigne === "Non" ? ["Hors ligne", "info"] : null) +
+    ligne("Écran / fenêtre", ecran + " / " + fenetre) +
+    ligne("Fuseau horaire", tz || "Inconnu") +
+    ligne("Système", ua.length > 70 ? ua.slice(0, 70) + "…" : ua);
+  rap("Connexion internet", enLigne); rap("Écran / fenêtre", ecran + " / " + fenetre);
+  rap("Fuseau horaire", tz || "inconnu"); rap("Système", ua);
+
+  /* Résumé */
+  var res = $("resume");
+  if (aRegler.length === 0) {
+    res.className = "resume ok";
+    res.innerHTML = '<div><b>Tout est en ordre</b><p>Aucun réglage à faire avant le terrain.</p></div>';
+  } else {
+    res.className = "resume att";
+    res.innerHTML = '<div><b>' + aRegler.length + ' point' + (aRegler.length > 1 ? 's' : '') + ' à régler avant le terrain</b><p>' + h(aRegler.join(" · ")) +
+                    '. Pendant les tests sur le PC, c\'est normal.</p></div>';
+  }
+  rapport.splice(1, 0, "Points à régler : " + (aRegler.length ? aRegler.join(" ; ") : "aucun"));
+  var texte = rapport.join("\n");
+  $("rapport").value = texte;
+
+  /* Test du serveur : réponse HTTP quelconque = le serveur répond ; aucun mot de passe n'est envoyé */
+  $("b-test").addEventListener("click", function () {
+    var url = d.urlCsweb || "";
+    var n = $("n-test"), btn = $("b-test");
+    if (!/^https?:\/\//i.test(url)) { n.textContent = "L'adresse enregistrée n'est pas une adresse web (http:// ou https://)."; return; }
+    if (location.protocol === "https:" && /^http:/i.test(url)) {
+      n.textContent = "Test impossible depuis cette page pour une adresse http://. Essayez une synchronisation.";
+      return;
+    }
+    btn.disabled = true; n.textContent = "Test en cours…";
+    var ctl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    var arret = setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
+    var t0 = Date.now();
+    var fin = function (ok, msg) {
+      clearTimeout(arret); btn.disabled = false;
+      var etat = ok ? ["Répond (" + (Date.now() - t0) + " ms)", "ok"] : ["Ne répond pas", "att"];
+      var lis = $("l-serveur").querySelectorAll("li");
+      lis[lis.length - 1].innerHTML = '<span class="k">Serveur joignable</span><span class="v">' + (ok ? "Oui" : "Non") + pastille(etat[0], etat[1]) + '</span>';
+      n.textContent = msg;
+      var r = $("rapport").value.replace(/\nServeur joignable : .*/g, "");
+      $("rapport").value = r.replace("\nDernière synchronisation :", "\nServeur joignable : " + (ok ? "oui" : "non") + " (" + (Date.now() - t0) + " ms)\nDernière synchronisation :");
+    };
+    var opts = { mode: "no-cors", cache: "no-store" };
+    if (ctl) opts.signal = ctl.signal;
+    fetch(url, opts).then(function () {
+      fin(true, "Le serveur a répondu.");
+    }).catch(function () {
+      fin(false, "Pas de réponse. Vérifiez la connexion internet, l'adresse et que le serveur est démarré (WAMP sur le PC).");
+    });
+  });
+
+  /* Mesure : la page se ferme, la logique relit les fichiers et rouvre la page */
+  $("b-mesure").addEventListener("click", function () {
+    $("b-mesure").disabled = true;
+    $("n-mesure").textContent = "Lecture en cours… la page se rouvrira toute seule.";
+    ETEC.fermer("MESURER");
+  });
+
+  /* Copie du rapport */
+  $("b-copie").addEventListener("click", function () {
+    var zone = $("rapport"), ok = false;
+    zone.removeAttribute("readonly");
+    zone.focus(); zone.select();
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    zone.setAttribute("readonly", "readonly");
+    if (!ok && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(zone.value).then(function () { $("n-copie").textContent = "Rapport copié."; },
+        function () { $("n-copie").textContent = "Copie impossible : sélectionnez le texte et copiez-le."; });
+      return;
+    }
+    $("n-copie").textContent = ok ? "Rapport copié." : "Copie impossible : sélectionnez le texte et copiez-le.";
+  });
+})();
+</script>
+</body>
+</html>

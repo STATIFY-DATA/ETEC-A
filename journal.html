@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Journal — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .filtres { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; align-items: end; background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; padding: 14px; }
+  .filtres label { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--gris); }
+  .filtres input, .filtres select { min-height: 42px; border-radius: 10px; border: 1.5px solid #D2D8CE; background: #FFFFFF; padding: 0 10px; font-size: 14px; font-family: var(--texte); color: var(--encre); }
+  .filtres .large { grid-column: span 2; }
+  .compte { font-size: 14px; color: var(--gris); }
+  .ev { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 2px 14px; padding: 11px 14px; border-bottom: 1px solid var(--bord-doux); font-size: 14px; }
+  .ev:last-child { border-bottom: none; }
+  .ev .quand { color: var(--gris); font-variant-numeric: tabular-nums; }
+  .ev .quoi b { font-weight: 700; }
+  .ev .det { grid-column: 2; color: var(--gris); font-size: 13.5px; }
+  .ev.echec { background: #FFF8EF; }
+  .evs { background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; overflow: hidden; }
+  .vide { text-align: center; padding: 34px 20px; color: var(--gris); }
+  @media (max-width: 640px) { .ev { grid-template-columns: 1fr; } .ev .det { grid-column: 1; } .filtres .large { grid-column: auto; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Journal</h1>
+    <p id="sous-titre">Chargement du journal…</p>
+  </section>
+
+  <section class="filtres" aria-label="Filtres">
+    <label>Du<input type="date" id="du"></label>
+    <label>Au<input type="date" id="au"></label>
+    <label>Type<select id="type"><option value="">Tous les types</option></select></label>
+    <label>Résultat<select id="statut"><option value="">Tous</option><option value="1">Succès</option><option value="2">Échec</option></select></label>
+    <label>Agent<input id="agent" placeholder="ex. ENQ001" autocomplete="off"></label>
+    <label>Zone<input id="grappe" inputmode="numeric" placeholder="ex. 020101" autocomplete="off"></label>
+    <label class="large">Rechercher dans le détail<input id="texte" type="search" autocomplete="off"></label>
+    <button type="button" class="btn" id="effacer">Effacer les filtres</button>
+  </section>
+
+  <p class="compte" id="compte"></p>
+  <section class="evs" id="evs" aria-live="polite"></section>
+  <button type="button" class="lien cache" id="plus">Afficher plus d'événements</button>
+
+  <section class="lien-bas">
+    <button type="button" class="lien" id="classique">Utiliser les écrans classiques</button>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var entree = ETEC.donnees();
+  var apercu = !entree || typeof entree !== "object";
+  if (apercu) { ETEC.apercu(); entree = { fichier: null, total: 3, max: 5000 }; }
+  var evs = [], limite = 100;
+
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+  $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+
+  var TYPES = { 1: "Synchronisation", 2: "Connexion", 3: "Erreur", 4: "Modification", 5: "Changement de statut", 6: "Renvoi pour correction", 7: "Dérogation d'accès", 8: "Correction effectuée" };
+  $("type").innerHTML += Object.keys(TYPES).map(function (k) { return '<option value="' + k + '">' + TYPES[k] + '</option>'; }).join("");
+
+  /* Date de l'événement (AAAAMMJJHHMM) comparée à un champ date (AAAA-MM-JJ) */
+  function jour(dh) { return Math.floor(n(dh) / 10000); }
+  function jourChamp(v) { return v ? n(v.replace(/-/g, "")) : 0; }
+
+  function filtrer() {
+    var du = jourChamp($("du").value), au = jourChamp($("au").value);
+    var ty = $("type").value, st = $("statut").value;
+    var ag = $("agent").value.trim().toUpperCase(), gr = $("grappe").value.trim(), tx = $("texte").value.trim().toUpperCase();
+    return evs.filter(function (e) {
+      var j = jour(e.dh);
+      if (du && j < du) return false;
+      if (au && j > au) return false;
+      if (ty && String(n(e.t)) !== ty) return false;
+      if (st && String(n(e.s)) !== st) return false;
+      if (ag && String(e.a || "").toUpperCase().indexOf(ag) < 0) return false;
+      if (gr && String(e.g || "").indexOf(gr) < 0) return false;
+      if (tx && (String(e.c || "") + " " + String(e.x || "")).toUpperCase().indexOf(tx) < 0) return false;
+      return true;
+    });
+  }
+
+  function afficher() {
+    var l = filtrer();
+    var vus = l.slice(0, limite);
+    $("compte").textContent = l.length === evs.length ? evs.length + " événement(s), du plus récent au plus ancien." : l.length + " événement(s) sur " + evs.length + " correspondent aux filtres.";
+    $("evs").innerHTML = vus.length ? vus.map(function (e) {
+      var ref = n(e.g) > 0 ? ' · Zone ' + h(e.g) + (n(e.u) > 0 ? ' · Structure ' + h(e.u) : '') + (n(e.i) > 0 ? ' · Répondant ' + h(e.i) : '') : '';
+      return '<div class="ev' + (n(e.s) === 2 ? ' echec' : '') + '"><span class="quand">' + h(e.d) + '</span>' +
+        '<span class="quoi"><b>' + h(TYPES[n(e.t)] || e.tl) + '</b> · ' + h(e.a) + ' · ' + (n(e.s) === 2 ? '<span class="pastille-etat e-corr">Échec</span>' : '<span class="pastille-etat e-ok">Succès</span>') + ref + '</span>' +
+        '<span class="det">' + (e.c ? '<span class="code">' + h(e.c) + '</span> ' : '') + h(e.x) + '</span></div>';
+    }).join("") : '<div class="vide">' + (evs.length ? "Aucun événement ne correspond aux filtres." : "Le journal est vide.") + '</div>';
+    $("plus").classList.toggle("cache", l.length <= limite);
+    $("plus").textContent = "Afficher plus d'événements (" + (l.length - vus.length) + " de plus)";
+  }
+
+  ["du", "au", "type", "statut"].forEach(function (id) { $(id).addEventListener("change", function () { limite = 100; afficher(); }); });
+  ["agent", "grappe", "texte"].forEach(function (id) { $(id).addEventListener("input", function () { limite = 100; afficher(); }); });
+  $("plus").addEventListener("click", function () { limite += 100; afficher(); });
+  $("effacer").addEventListener("click", function () {
+    ["du", "au", "type", "statut", "agent", "grappe", "texte"].forEach(function (id) { $(id).value = ""; });
+    limite = 100; afficher();
+  });
+
+  function charger(liste) {
+    evs = (Array.isArray(liste) ? liste : []).slice().sort(function (a, b) { return n(b.dh) - n(a.dh); });
+    var total = n(entree.total);
+    $("sous-titre").textContent = total > evs.length
+      ? "Les " + evs.length + " derniers événements enregistrés sur cet appareil (sur " + total + ")."
+      : "Événements enregistrés sur cet appareil.";
+    afficher();
+  }
+
+  if (apercu || !entree.fichier) {
+    charger([
+      { dh: 202610130829, d: "13/10/2026 08:29", t: 1, tl: "Sync", a: "SUP001", s: 1, g: "000000", u: "00", i: "00", c: "CSWeb", x: "Synchronisation réussie" },
+      { dh: 202610121700, d: "12/10/2026 17:00", t: 5, tl: "Changement de statut", a: "CTR001", s: 1, g: "020101", u: "02", i: "01", c: "VALIDATION", x: "Questionnaire validé par le contrôleur" },
+      { dh: 202610121655, d: "12/10/2026 16:55", t: 2, tl: "Login", a: "ENQ002", s: 2, g: "000000", u: "00", i: "00", c: "CODE", x: "Code personnel incorrect" }]);
+  } else {
+    fetch(entree.fichier + "?t=" + Date.now()).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(charger).catch(function (e) {
+      $("sous-titre").textContent = "Le journal n'a pas pu être lu (" + (e && e.message ? e.message : e) + "). Utilisez les écrans classiques.";
+      $("evs").innerHTML = '<div class="vide">Journal indisponible.</div>';
+    });
+  }
+})();
+</script>
+</body>
+</html>

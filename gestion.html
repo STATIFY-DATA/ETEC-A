@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignations et comptes — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .carte h2 { margin: 0 0 4px; font-family: var(--titre); font-weight: 600; font-size: 18px; }
+  .carte p.aide { margin: 0 0 14px; font-size: 13.5px; color: var(--gris); }
+  .cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .comptes-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .comptes-outils input, .comptes-outils select { min-height: 42px; border-radius: 10px; border: 1.5px solid #D2D8CE; background: #FFFFFF; padding: 0 12px; font-size: 14px; font-family: var(--texte); }
+  .comptes-outils input { flex: 1 1 220px; }
+  .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .edition td { background: #FAFBF8; }
+  .plus { margin-top: 10px; }
+  @media (max-width: 640px) { .cartes { grid-template-columns: 1fr; } .acts { justify-content: flex-start; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1 id="titre">Gérer les assignations</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <div id="resultat" class="cache" aria-live="polite"></div>
+
+  <h2 class="section-t">Assignations</h2>
+  <section class="cartes">
+    <form class="carte cache" id="f-grappe" novalidate>
+      <h2>Assigner une zone à un contrôleur</h2>
+      <p class="aide">Crée les structures 1 à N de la zone (ou met à jour celles qui existent) et les confie au contrôleur. Il les recevra à sa prochaine synchronisation avec vous.</p>
+      <div class="formulaire">
+        <label class="champ">Zone (6 chiffres)<input name="grappe" inputmode="numeric" maxlength="6" placeholder="ex. 020101" required></label>
+        <label class="champ">Nombre de structures<input name="nb" inputmode="numeric" maxlength="2" placeholder="1 à 99" required></label>
+        <label class="champ">Contrôleur<input name="ctr" list="l-ctr" maxlength="6" placeholder="ex. CTR001" autocomplete="off" required></label>
+        <button type="submit" class="btn btn-principal">Assigner la zone</button>
+      </div>
+    </form>
+
+    <form class="carte" id="f-upi" novalidate>
+      <h2>Assigner des structures à un enquêteur</h2>
+      <p class="aide">La zone doit d'abord être assignée par le superviseur. L'enquêteur recevra les structures à sa prochaine synchronisation.</p>
+      <div class="formulaire">
+        <label class="champ">Zone (6 chiffres)<input name="grappe" inputmode="numeric" maxlength="6" placeholder="ex. 020101" required></label>
+        <label class="champ">Première structure<input name="deb" inputmode="numeric" maxlength="2" placeholder="1 à 99" required></label>
+        <label class="champ">Dernière structure<input name="fin" inputmode="numeric" maxlength="2" placeholder="1 à 99" required></label>
+        <label class="champ">Enquêteur<input name="enq" list="l-enq" maxlength="6" placeholder="ex. ENQ001" autocomplete="off" required></label>
+        <button type="submit" class="btn btn-principal">Assigner les structures</button>
+      </div>
+    </form>
+
+    <form class="carte" id="f-retrait" novalidate>
+      <h2>Retirer des structures</h2>
+      <p class="aide">Les structures retirées ne sont plus proposées à l'enquêteur. Les questionnaires déjà saisis sont conservés.</p>
+      <div class="formulaire">
+        <label class="champ">Zone (6 chiffres)<input name="grappe" inputmode="numeric" maxlength="6" placeholder="ex. 020101" required></label>
+        <label class="champ">Première structure<input name="deb" inputmode="numeric" maxlength="2" placeholder="1 à 99" required></label>
+        <label class="champ">Dernière structure<input name="fin" inputmode="numeric" maxlength="2" placeholder="1 à 99" required></label>
+        <button type="submit" class="btn btn-danger">Retirer les structures</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="bloc-comptes" class="cache">
+    <h2 class="section-t" style="margin-bottom:12px">Comptes des agents</h2>
+    <div class="cartes" style="margin-bottom:14px">
+      <form class="carte" id="f-creer" novalidate>
+        <h2>Créer un compte</h2>
+        <p class="aide">Le code personnel n'est jamais enregistré en clair. Le compte sera transmis aux autres appareils à la prochaine synchronisation.</p>
+        <div class="formulaire">
+          <label class="champ">Identifiant (6 caractères)<input name="id" maxlength="6" placeholder="ex. ENQ010" autocomplete="off" required></label>
+          <label class="champ">Nom et prénom<input name="nom" maxlength="50" autocomplete="off" required></label>
+          <label class="champ">Rôle<select name="role"><option value="1">Enquêteur</option><option value="2">Contrôleur</option><option value="3">Superviseur</option><option value="4">Superviseur régional</option></select></label>
+          <label class="champ cache" data-zone="1">Région<input name="zone" inputmode="numeric" maxlength="2" placeholder="ex. 2 pour 02"></label>
+          <label class="champ">Code personnel (4 à 10 chiffres)<input name="code" type="password" inputmode="numeric" maxlength="10" autocomplete="new-password" required></label>
+          <button type="submit" class="btn btn-principal">Créer le compte</button>
+        </div>
+      </form>
+    </div>
+    <div class="comptes-outils">
+      <input id="recherche" type="search" placeholder="Rechercher un identifiant ou un nom" aria-label="Rechercher un compte" autocomplete="off">
+      <select id="filtre-role" aria-label="Filtrer par rôle"><option value="">Tous les rôles</option><option value="1">Enquêteurs</option><option value="2">Contrôleurs</option><option value="3">Superviseurs</option><option value="4">Superviseurs régionaux</option></select>
+      <select id="filtre-statut" aria-label="Filtrer par état"><option value="">Tous les états</option><option value="1">Actifs</option><option value="2">Verrouillés</option></select>
+    </div>
+    <div class="tableau-zone"><table class="tableau" id="t-comptes"></table></div>
+    <button type="button" class="lien plus cache" id="plus">Afficher plus de comptes</button>
+  </section>
+
+  <datalist id="l-enq"></datalist>
+  <datalist id="l-ctr"></datalist>
+
+  <section class="lien-bas">
+    <button type="button" class="lien" id="classique">Utiliser les écrans classiques</button>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    d = { role: 3, agent: "SUP001", comptes: [
+      { id: "ENQ001", nom: "ENQUETEUR UN", role: 1, roleLib: "Enquêteur", zone: 0, statut: 1, statutLib: "Actif" },
+      { id: "ENQ002", nom: "ENQUETEUR DEUX", role: 1, roleLib: "Enquêteur", zone: 0, statut: 2, statutLib: "Verrouillé" },
+      { id: "CTR001", nom: "CONTROLEUR UN", role: 2, roleLib: "Contrôleur", zone: 0, statut: 1, statutLib: "Actif" },
+      { id: "ZON002", nom: "SUPERVISEUR CENTRE", role: 4, roleLib: "Superviseur régional", zone: 2, statut: 1, statutLib: "Actif" },
+      { id: "SUP001", nom: "SUPERVISEUR", role: 3, roleLib: "Superviseur", zone: 0, statut: 1, statutLib: "Actif" }] };
+  }
+  var role = n(d.role);
+  var occupe = false, limite = 60, edition = null;
+
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+  $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+  $("titre").textContent = role === 3 ? "Assignations et comptes" : "Gérer les assignations";
+  $("sous-titre").textContent = role === 3 ? "Zones, structures et comptes des agents" : "Les structures des zones de votre équipe";
+  if (role === 3) { $("f-grappe").classList.remove("cache"); $("bloc-comptes").classList.remove("cache"); }
+
+  function comptes() { return Array.isArray(d.comptes) ? d.comptes : []; }
+  function listes() {
+    var opt = function (r) { return comptes().filter(function (c) { return n(c.role) === r; }).map(function (c) { return '<option value="' + h(c.id) + '">' + h(c.nom) + '</option>'; }).join(""); };
+    $("l-enq").innerHTML = opt(1);
+    $("l-ctr").innerHTML = opt(2);
+  }
+
+  /* Envoi d'une action à l'application : mêmes règles que l'écran classique */
+  function action(args, apres) {
+    if (occupe) return;
+    var tous = { p_action: "", p_a: "", p_b: "", p_c: "", p_d: "", p_e: "", p_f: "" };
+    for (var k in args) tous[k] = String(args[k] === undefined || args[k] === null ? "" : args[k]);
+    if (!ETEC.dansCSPro()) { ETEC.bandeau($("resultat"), { etat: "OK", message: "Aperçu : l'opération « " + tous.p_action + " » serait exécutée par l'application." }); return; }
+    occupe = true;
+    ETEC.appeler("ACTION_HTML", tous).then(function (r) {
+      ETEC.bandeau($("resultat"), r);
+      if (r && r.etat === "OK" && apres) apres();
+      return ETEC.appeler("DONNEES_GESTION", {}).then(function (x) { if (x && typeof x === "object") d = x; });
+    }).catch(function (e) {
+      ETEC.bandeau($("resultat"), { etat: "ERREUR", message: "L'opération n'a pas pu être envoyée à l'application : " + (e && e.message ? e.message : e) });
+    }).then(function () { occupe = false; listes(); afficherComptes(); });
+  }
+  function val(f, nom) { var el = f.elements[nom]; return el ? String(el.value).trim() : ""; }
+
+  $("f-grappe").addEventListener("submit", function (e) {
+    e.preventDefault(); var f = e.target;
+    action({ p_action: "ASSIGNER_GRAPPE", p_a: val(f, "grappe"), p_b: val(f, "nb"), p_c: val(f, "ctr").toUpperCase() }, function () { f.reset(); });
+  });
+  $("f-upi").addEventListener("submit", function (e) {
+    e.preventDefault(); var f = e.target;
+    action({ p_action: "ASSIGNER_UPI", p_a: val(f, "grappe"), p_b: val(f, "deb"), p_c: val(f, "fin"), p_d: val(f, "enq").toUpperCase() }, function () { f.reset(); });
+  });
+  $("f-retrait").addEventListener("submit", function (e) {
+    e.preventDefault(); var f = e.target;
+    var msg = "Retirer les structures " + val(f, "deb") + " à " + val(f, "fin") + " de la zone " + val(f, "grappe") + " ?";
+    var b = f.querySelector("button[type=submit]");
+    if (b.getAttribute("data-confirme") !== "1") { b.setAttribute("data-confirme", "1"); b.textContent = "Confirmer le retrait"; ETEC.bandeau($("resultat"), { etat: "ERREUR", message: msg + " Cliquez sur « Confirmer le retrait »." }); return; }
+    b.removeAttribute("data-confirme"); b.textContent = "Retirer les structures";
+    action({ p_action: "RETIRER_UPI", p_a: val(f, "grappe"), p_b: val(f, "deb"), p_c: val(f, "fin") }, function () { f.reset(); });
+  });
+  $("f-retrait").addEventListener("input", function () { var b = $("f-retrait").querySelector("button[type=submit]"); b.removeAttribute("data-confirme"); b.textContent = "Retirer les structures"; });
+
+  var fc = $("f-creer");
+  fc.elements.role.addEventListener("change", function () { fc.querySelector("[data-zone]").classList.toggle("cache", fc.elements.role.value !== "4"); });
+  fc.addEventListener("submit", function (e) {
+    e.preventDefault();
+    action({ p_action: "CREER_COMPTE", p_a: val(fc, "id").toUpperCase(), p_b: val(fc, "nom"), p_c: val(fc, "role"), p_d: val(fc, "zone"), p_e: val(fc, "code") }, function () { fc.reset(); fc.querySelector("[data-zone]").classList.add("cache"); });
+  });
+
+  /* Liste des comptes */
+  function ligneEdition(c) {
+    return '<tr class="edition"><td colspan="5"><form class="formulaire" data-modif="' + h(c.id) + '" novalidate>' +
+      '<label class="champ">Que modifier ?<select name="quoi"><option value="1">Le nom</option><option value="2">Le code personnel</option>' + (c.id !== d.agent ? '<option value="3">Le rôle</option>' : '') + '</select></label>' +
+      '<label class="champ" data-q="1">Nouveau nom<input name="nom" maxlength="50" value="' + h(c.nom) + '"></label>' +
+      '<label class="champ cache" data-q="2">Nouveau code (4 à 10 chiffres)<input name="code" type="password" inputmode="numeric" maxlength="10" autocomplete="new-password"></label>' +
+      '<label class="champ cache" data-q="3">Nouveau rôle<select name="role"><option value="1">Enquêteur</option><option value="2">Contrôleur</option><option value="3">Superviseur</option><option value="4">Superviseur régional</option></select></label>' +
+      '<label class="champ cache" data-q="4">Région<input name="zone" inputmode="numeric" maxlength="2" value="' + (n(c.zone) > 0 ? n(c.zone) : '') + '"></label>' +
+      '<div class="acts"><button type="submit" class="btn btn-principal btn-petit">Enregistrer</button><button type="button" class="btn btn-petit" data-fermer="1">Annuler</button></div>' +
+      '</form></td></tr>';
+  }
+  function afficherComptes() {
+    if (role !== 3) return;
+    var q = $("recherche").value.trim().toUpperCase(), fr = $("filtre-role").value, fs = $("filtre-statut").value;
+    var l = comptes().filter(function (c) {
+      if (fr && String(n(c.role)) !== fr) return false;
+      if (fs && String(n(c.statut)) !== fs) return false;
+      return !q || (c.id + " " + c.nom).toUpperCase().indexOf(q) >= 0;
+    }).sort(function (a, b) { return String(a.id).localeCompare(String(b.id)); });
+    var vus = l.slice(0, limite);
+    $("t-comptes").innerHTML = '<thead><tr><th>Identifiant</th><th>Nom</th><th>Rôle</th><th>État</th><th class="n">Actions</th></tr></thead><tbody>' +
+      (vus.length ? vus.map(function (c) {
+        var etat = n(c.statut) === 2 ? '<span class="pastille-etat e-corr">' + h(c.statutLib) + '</span>' : '<span class="pastille-etat e-ok">' + h(c.statutLib) + '</span>';
+        var rl = h(c.roleLib) + (n(c.role) === 4 && n(c.zone) > 0 ? ' (région ' + ("0" + n(c.zone)).slice(-2) + ')' : '');
+        var acts = '<button type="button" class="btn btn-petit" data-editer="' + h(c.id) + '">Modifier</button>' +
+          (c.id !== d.agent && n(c.statut) !== 2 ? '<button type="button" class="btn btn-danger btn-petit" data-bloquer="' + h(c.id) + '">Bloquer</button>' : '');
+        return '<tr><td><b>' + h(c.id) + '</b></td><td>' + h(c.nom) + '</td><td>' + rl + '</td><td>' + etat + '</td><td><div class="acts">' + acts + '</div></td></tr>' +
+          (edition === c.id ? ligneEdition(c) : '');
+      }).join("") : '<tr><td colspan="5">Aucun compte ne correspond.</td></tr>') + '</tbody>';
+    $("plus").classList.toggle("cache", l.length <= limite);
+    $("plus").textContent = "Afficher plus de comptes (" + (l.length - vus.length) + " de plus)";
+  }
+  ["recherche", "filtre-role", "filtre-statut"].forEach(function (id) { $(id).addEventListener(id === "recherche" ? "input" : "change", function () { limite = 60; afficherComptes(); }); });
+  $("plus").addEventListener("click", function () { limite += 60; afficherComptes(); });
+
+  function majChampsEdition(f) {
+    var quoi = f.elements.quoi.value;
+    f.querySelector('[data-q="1"]').classList.toggle("cache", quoi !== "1");
+    f.querySelector('[data-q="2"]').classList.toggle("cache", quoi !== "2");
+    f.querySelector('[data-q="3"]').classList.toggle("cache", quoi !== "3");
+    f.querySelector('[data-q="4"]').classList.toggle("cache", !(quoi === "3" && f.elements.role.value === "4"));
+  }
+  document.addEventListener("change", function (e) {
+    var f = e.target.closest ? e.target.closest("form[data-modif]") : null;
+    if (f) majChampsEdition(f);
+  });
+  document.addEventListener("submit", function (e) {
+    var f = e.target;
+    if (!f.hasAttribute || !f.hasAttribute("data-modif")) return;
+    e.preventDefault();
+    var quoi = f.elements.quoi.value;
+    action({ p_action: "MODIFIER_COMPTE", p_a: f.getAttribute("data-modif"), p_b: quoi,
+             p_c: quoi === "1" ? val(f, "nom") : quoi === "2" ? val(f, "code") : "", p_d: quoi === "3" ? val(f, "role") : "", p_e: quoi === "3" ? val(f, "zone") : "" },
+           function () { edition = null; });
+  });
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest ? e.target.closest("button") : null;
+    if (!el) return;
+    if (el.hasAttribute("data-editer")) {
+      edition = edition === el.getAttribute("data-editer") ? null : el.getAttribute("data-editer");
+      afficherComptes();
+      var f = document.querySelector("form[data-modif]");
+      if (f) { var c = comptes().filter(function (x) { return x.id === edition; })[0]; if (c) f.elements.role.value = String(n(c.role) || 1); majChampsEdition(f); }
+    } else if (el.hasAttribute("data-fermer")) {
+      edition = null; afficherComptes();
+    } else if (el.hasAttribute("data-bloquer")) {
+      var id = el.getAttribute("data-bloquer");
+      if (el.getAttribute("data-confirme") !== "1") { el.setAttribute("data-confirme", "1"); el.textContent = "Confirmer le blocage"; return; }
+      action({ p_action: "BLOQUER_COMPTE", p_a: id });
+    }
+  });
+
+  listes();
+  afficherComptes();
+})();
+</script>
+</body>
+</html>

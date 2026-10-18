@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dérogations et déblocages — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .carte h2 { margin: 0 0 4px; font-family: var(--titre); font-weight: 600; font-size: 18px; }
+  .carte p.aide { margin: 0 0 14px; font-size: 13.5px; color: var(--gris); }
+  .cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .liste { list-style: none; margin: 0; padding: 0; }
+  .liste li { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 0; border-bottom: 1px solid var(--bord-doux); font-size: 14.5px; }
+  .liste li:last-child { border-bottom: none; }
+  .vide { color: var(--gris); font-size: 14px; margin: 0; }
+  .code-du-jour { margin-top: 12px; padding: 14px 16px; border-radius: 12px; background: var(--accent-doux); color: #14523F; }
+  .code-du-jour b { display: block; font-family: var(--code); font-size: 34px; letter-spacing: 0.12em; color: var(--vert-nuit); }
+  .deux-boutons { display: flex; gap: 8px; flex-wrap: wrap; }
+  @media (max-width: 640px) { .cartes { grid-template-columns: 1fr; } .deux-boutons .btn { flex: 1 1 100%; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Dérogations et déblocages</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <div id="resultat" class="cache" aria-live="polite"></div>
+
+  <h2 class="section-t">Comptes bloqués</h2>
+  <section class="cartes">
+    <div class="carte">
+      <h2>Comptes verrouillés sur cet appareil</h2>
+      <p class="aide" id="aide-verrou"></p>
+      <ul class="liste" id="verrouilles"></ul>
+    </div>
+    <form class="carte" id="f-distance" novalidate>
+      <h2>Débloquer un agent à distance</h2>
+      <p class="aide">Pour un agent bloqué sur son propre appareil. Le code par téléphone ne demande pas internet ; il n'est valable qu'aujourd'hui et que pour cet agent.</p>
+      <div class="formulaire">
+        <label class="champ">Identifiant de l'agent<input name="id" maxlength="6" placeholder="ex. ENQ002" autocomplete="off"></label>
+      </div>
+      <div class="deux-boutons" style="margin-top:12px">
+        <button type="button" class="btn btn-principal" id="b-code">Obtenir un code par téléphone</button>
+        <button type="button" class="btn" id="b-serveur">Débloquer par le serveur (internet)</button>
+      </div>
+      <div id="code-du-jour" class="cache"></div>
+    </form>
+  </section>
+
+  <h2 class="section-t">Dérogations d'accès</h2>
+  <section class="cartes">
+    <form class="carte" id="f-derog" novalidate>
+      <h2>Autoriser un enquêteur sur une structure</h2>
+      <p class="aide">Accès exceptionnel à une structure qui ne lui est pas assignée (par exemple pour remplacer un collègue).</p>
+      <div class="formulaire">
+        <label class="champ">Zone (6 chiffres)<input name="grappe" inputmode="numeric" maxlength="6" placeholder="ex. 020101"></label>
+        <label class="champ">Structure<input name="upi" inputmode="numeric" maxlength="2" placeholder="1 à 99"></label>
+        <label class="champ">Enquêteur<input name="enq" maxlength="6" placeholder="ex. ENQ001" autocomplete="off"></label>
+        <button type="submit" class="btn btn-principal">Autoriser</button>
+      </div>
+    </form>
+    <form class="carte" id="f-rouvrir" novalidate>
+      <h2>Rouvrir une zone verrouillée</h2>
+      <p class="aide">Sur cet appareil seulement : à faire sur l'appareil de l'enquêteur dont la zone est verrouillée.</p>
+      <div class="formulaire">
+        <label class="champ">Zone (6 chiffres)<input name="grappe" inputmode="numeric" maxlength="6" placeholder="ex. 020101"></label>
+        <label class="champ">Enquêteur<input name="enq" maxlength="6" placeholder="ex. ENQ001" autocomplete="off"></label>
+        <button type="submit" class="btn">Rouvrir la zone</button>
+      </div>
+    </form>
+    <div class="carte">
+      <h2>Dérogations en cours</h2>
+      <p class="aide" id="aide-derog"></p>
+      <ul class="liste" id="derogations"></ul>
+    </div>
+  </section>
+
+  <section class="lien-bas">
+    <button type="button" class="lien" id="classique">Utiliser les écrans classiques</button>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var d = ETEC.donnees();
+  if (!d || typeof d !== "object") {
+    ETEC.apercu();
+    d = { role: 2, agent: "CTR001", verrouilles: [{ id: "ENQ002", txt: "ENQ002 - ENQUETEUR DEUX (Enquêteur)" }],
+          derogations: [{ g: "020101", u: "07", enq: "ENQ004", ctr: "CTR001" }], resultat: null };
+  }
+  var role = n(d.role);
+  var occupe = false;
+
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+  $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+  $("sous-titre").textContent = role === 2 ? "Les enquêteurs et les structures de votre équipe" : "Tous les agents et toutes les structures";
+  $("aide-verrou").textContent = role === 2
+    ? "Les enquêteurs de votre équipe qui ont saisi 3 codes faux sur cet appareil."
+    : "Les agents qui ont saisi 3 codes faux sur cet appareil.";
+  $("aide-derog").textContent = role === 2 ? "Les accès exceptionnels sur les structures de votre équipe." : "Tous les accès exceptionnels enregistrés.";
+  ETEC.bandeau($("resultat"), d.resultat);
+
+  function afficher() {
+    var v = Array.isArray(d.verrouilles) ? d.verrouilles : [];
+    $("verrouilles").innerHTML = v.length ? v.map(function (c) {
+      return '<li><span>' + h(c.txt) + '</span><button type="button" class="btn btn-principal btn-petit" data-reactiver="' + h(c.id) + '">Réactiver</button></li>';
+    }).join("") : '<li class="vide">Aucun compte verrouillé.</li>';
+    var g = Array.isArray(d.derogations) ? d.derogations : [];
+    $("derogations").innerHTML = g.length ? g.map(function (x) {
+      return '<li><span>Zone <span class="code">' + h(x.g) + '</span> · Structure ' + h(x.u) + ' · <b>' + h(x.enq) + '</b>' + (role === 3 && x.ctr ? ' · ' + h(x.ctr) : '') + '</span>' +
+        '<button type="button" class="btn btn-danger btn-petit" data-retirer="' + h(x.g) + '|' + h(x.u) + '">Retirer</button></li>';
+    }).join("") : '<li class="vide">Aucune dérogation en cours.</li>';
+  }
+
+  function action(args, apres) {
+    if (occupe) return;
+    var tous = { p_action: "", p_a: "", p_b: "", p_c: "", p_d: "", p_e: "", p_f: "" };
+    for (var k in args) tous[k] = String(args[k] === undefined || args[k] === null ? "" : args[k]);
+    if (!ETEC.dansCSPro()) { ETEC.bandeau($("resultat"), { etat: "OK", message: "Aperçu : l'opération « " + tous.p_action + " » serait exécutée par l'application." }); return; }
+    occupe = true;
+    ETEC.appeler("ACTION_HTML", tous).then(function (r) {
+      ETEC.bandeau($("resultat"), r);
+      if (apres) apres(r);
+      return ETEC.appeler("DONNEES_DEROGATION", { p_resultat: "null" }).then(function (x) { if (x && typeof x === "object") d = x; });
+    }).catch(function (e) {
+      ETEC.bandeau($("resultat"), { etat: "ERREUR", message: "L'opération n'a pas pu être envoyée à l'application : " + (e && e.message ? e.message : e) });
+    }).then(function () { occupe = false; afficher(); });
+  }
+  function val(f, nom) { return String(f.elements[nom].value).trim(); }
+
+  var fd = $("f-distance");
+  fd.addEventListener("submit", function (e) { e.preventDefault(); });
+  $("b-code").addEventListener("click", function () {
+    $("code-du-jour").className = "cache";
+    action({ p_action: "CODE_DEBLOCAGE", p_a: val(fd, "id").toUpperCase() }, function (r) {
+      if (r && r.etat === "OK" && r.code) {
+        $("code-du-jour").className = "code-du-jour";
+        $("code-du-jour").innerHTML = 'Code de déblocage pour ' + h(val(fd, "id").toUpperCase()) + ', valable aujourd\'hui :<b>' + h(r.code) + '</b>Dictez ce code à l\'agent : il le saisira sur l\'écran de connexion de son appareil.';
+      }
+    });
+  });
+  $("b-serveur").addEventListener("click", function () {
+    var id = val(fd, "id").toUpperCase();
+    if (!id) { ETEC.bandeau($("resultat"), { etat: "ERREUR", message: "Indiquez l'identifiant de l'agent à débloquer." }); return; }
+    ETEC.bandeau($("resultat"), { etat: "OK", message: "Connexion au serveur… La page va se fermer puis revenir avec le résultat." });
+    ETEC.fermer("SERVEUR:" + id);
+  });
+
+  var fg = $("f-derog");
+  fg.addEventListener("submit", function (e) {
+    e.preventDefault();
+    action({ p_action: "DEROGATION", p_a: "1", p_b: val(fg, "grappe"), p_c: val(fg, "upi"), p_d: val(fg, "enq").toUpperCase() }, function (r) { if (r && r.etat === "OK") fg.reset(); });
+  });
+  var fr = $("f-rouvrir");
+  fr.addEventListener("submit", function (e) {
+    e.preventDefault();
+    action({ p_action: "DEROGATION", p_a: "3", p_b: val(fr, "grappe"), p_c: "", p_d: val(fr, "enq").toUpperCase() }, function (r) { if (r && r.etat === "OK") fr.reset(); });
+  });
+
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest ? e.target.closest("button") : null;
+    if (!el) return;
+    if (el.hasAttribute("data-reactiver")) {
+      if (el.getAttribute("data-confirme") !== "1") { el.setAttribute("data-confirme", "1"); el.textContent = "Confirmer la réactivation"; return; }
+      action({ p_action: "REACTIVER", p_a: el.getAttribute("data-reactiver") });
+    } else if (el.hasAttribute("data-retirer")) {
+      if (el.getAttribute("data-confirme") !== "1") { el.setAttribute("data-confirme", "1"); el.textContent = "Confirmer le retrait"; return; }
+      var p = el.getAttribute("data-retirer").split("|");
+      action({ p_action: "DEROGATION", p_a: "2", p_b: p[0], p_c: p[1], p_d: "" });
+    }
+  });
+
+  afficher();
+})();
+</script>
+</body>
+</html>

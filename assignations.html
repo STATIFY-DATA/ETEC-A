@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assignations — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .resume { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .res { background: var(--surface); border: 1px solid var(--bord); border-radius: 14px; padding: 14px 16px; }
+  .res .l { font-size: 12.5px; font-weight: 600; color: var(--gris); }
+  .res .v { font-family: var(--titre); font-size: 28px; font-weight: 600; line-height: 1.1; margin-top: 4px; }
+  .outils { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .recherche { flex: 1 1 260px; position: relative; }
+  .recherche input { width: 100%; min-height: 46px; border-radius: 12px; border: 1.5px solid #D2D8CE; background: #FFFFFF; padding: 0 14px 0 42px; font-size: 15px; }
+  .recherche input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px #D5EFE6; }
+  .recherche svg { position: absolute; left: 13px; top: 13px; width: 20px; height: 20px; color: var(--gris); }
+  .filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filtre { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--bord); background: var(--surface); font-weight: 600; font-size: 13.5px; color: var(--encre); cursor: pointer; }
+  .filtre[aria-pressed="true"] { background: var(--vert-nuit); border-color: var(--vert-nuit); color: #FFFFFF; }
+  .grappes { display: flex; flex-direction: column; gap: 10px; }
+  .grappe { background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; overflow: hidden; }
+  .g-tete { position: relative; width: 100%; display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 14px 48px 14px 16px; background: none; border: none; text-align: left; cursor: pointer; color: var(--encre); }
+  .g-tete:hover { background: #FAFBF8; }
+  .g-nom { display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
+  .g-nom b { font-size: 15.5px; }
+  .g-nom span { font-size: 12.5px; color: var(--gris); }
+  .g-prog { flex: 1 1 160px; display: flex; align-items: center; gap: 10px; min-width: 140px; }
+  .piste { flex: 1; height: 7px; border-radius: 99px; background: #E8EBE4; overflow: hidden; }
+  .piste i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+  .g-prog small { font-size: 12.5px; color: var(--gris); font-weight: 600; white-space: nowrap; }
+  .chevron { position: absolute; right: 16px; top: 50%; margin-top: -10px; width: 20px; height: 20px; color: var(--gris); transition: transform .15s; }
+  .grappe.ouverte .chevron { transform: rotate(180deg); }
+  .upis { border-top: 1px solid var(--bord-doux); }
+  .upi { display: grid; grid-template-columns: 82px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--bord-doux); }
+  .upi:last-child { border-bottom: none; }
+  .upi .n { font-weight: 700; font-size: 14px; }
+  .upi .d { font-size: 13px; color: var(--gris); min-width: 0; }
+  .upi .d b { color: var(--encre); font-weight: 600; }
+  .upi .tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .vide { text-align: center; padding: 40px 20px; color: var(--gris); }
+  .vide b { display: block; color: var(--encre); font-size: 16px; margin-bottom: 6px; }
+  .plus { align-self: center; }
+  @media (max-width: 640px) {
+    .upi { grid-template-columns: 64px minmax(0, 1fr); }
+    .upi .tags { grid-column: 1 / -1; justify-content: flex-start; }
+    .res .v { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1 id="titre">Mes assignations</h1>
+    <p id="sous-titre">Chargement de la liste…</p>
+  </section>
+
+  <section class="resume" id="resume" aria-label="Résumé"></section>
+
+  <section class="outils" id="outils">
+    <label class="recherche">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="recherche" type="search" placeholder="Rechercher une zone ou un agent" aria-label="Rechercher une zone ou un agent" autocomplete="off">
+    </label>
+    <div class="filtres" role="group" aria-label="Filtrer par état" id="filtres"></div>
+  </section>
+
+  <section class="grappes" id="grappes" aria-live="polite"></section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var entree = ETEC.donnees();
+  var apercu = !entree || typeof entree !== "object";
+  if (apercu) { ETEC.apercu(); entree = { fichier: null, role: 2, agent: "CTR001", nombre: 0 }; }
+  var role = Number(entree.role) || 1;
+
+  $("titre").textContent = role === 1 ? "Mes assignations" : role === 2 ? "Assignations de mon équipe" : role === 4 ? "Assignations de ma région" : "Toutes les assignations";
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+
+  var CHEVRON = '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+  /* État d'une structure, à partir des mêmes compteurs que l'ancienne liste */
+  function etat(a) {
+    if (a.retiree) return { k: "retiree", lib: "Retirée", cls: "e-gris" };
+    if (a.c > 0) return { k: "corr", lib: "À corriger", cls: "e-corr" };
+    if (a.nb === 0) return { k: "non", lib: "Non commencée", cls: "e-gris" };
+    if (a.t >= a.nb) return { k: "fin", lib: "Terminée", cls: "e-ok" };
+    return { k: "cours", lib: "En cours", cls: "e-cours" };
+  }
+  var FILTRES = [["tous", "Toutes"], ["non", "Non commencées"], ["cours", "En cours"], ["corr", "À corriger"], ["fin", "Terminées"]];
+  var filtre = "tous", texte = "";
+  var donnees = [], groupes = [], ouverts = {}, limite = 60;
+
+  function exemple() {
+    var l = [], i, u;
+    for (i = 1; i <= 5; i++) for (u = 1; u <= 8; u++) {
+      var nb = (i * u) % 4 === 0 ? 0 : 1 + (u % 2), t = u % 3 === 0 ? nb : Math.max(0, nb - 1);
+      l.push({ g: "0201" + ("0" + i).slice(-2), u: ("0" + u).slice(-2), enq: "ENQ00" + (1 + (u % 3)), ctr: "CTR001", derog: u === 7 ? "ENQ004" : "", retiree: (i === 5 && u === 8) ? 1 : 0, rc: i % 2, re: u % 4 ? 1 : 0, nb: nb, t: t, c: (i === 2 && u === 3) ? 1 : 0 });
+    }
+    return l;
+  }
+
+  function regrouper() {
+    var map = {}, ordre = [];
+    donnees.forEach(function (a) {
+      a.e = etat(a);
+      if (!map[a.g]) { map[a.g] = { g: a.g, ctr: a.ctr, rc: a.rc, upis: [] }; ordre.push(a.g); }
+      map[a.g].upis.push(a);
+    });
+    groupes = ordre.map(function (g) { return map[g]; });
+    if (groupes.length <= 6) groupes.forEach(function (gr) { ouverts[gr.g] = true; });
+  }
+
+  function resume() {
+    var n = { non: 0, cours: 0, corr: 0, fin: 0, retiree: 0 };
+    donnees.forEach(function (a) { n[a.e.k]++; });
+    $("sous-titre").textContent = donnees.length + " structure" + (donnees.length > 1 ? "s" : "") + " dans " + groupes.length + " zone" + (groupes.length > 1 ? "s" : "");
+    var cartes = [["Non commencées", n.non], ["En cours", n.cours], ["À corriger", n.corr], ["Terminées ou validées", n.fin]];
+    if (n.retiree) cartes.push(["Retirées", n.retiree]);
+    $("resume").innerHTML = cartes.map(function (c) {
+      return '<div class="res"><div class="l">' + c[0] + '</div><div class="v"' + (c[0] === "À corriger" && c[1] > 0 ? ' style="color:var(--orange)"' : '') + '>' + c[1] + '</div></div>';
+    }).join("");
+  }
+
+  function correspond(a) {
+    if (filtre !== "tous" && a.e.k !== filtre) return false;
+    if (!texte) return true;
+    return (a.g + " " + a.u + " " + a.enq + " " + a.ctr + " " + a.derog).toUpperCase().indexOf(texte) >= 0;
+  }
+
+  function ligneUpi(a) {
+    var det = a.nb === 0 ? "aucun questionnaire" : a.nb + " questionnaire" + (a.nb > 1 ? "s" : "") + ", " + a.t + " terminé(s) ou validé(s), " + a.c + " à corriger";
+    var tags = '<span class="pastille-etat ' + a.e.cls + '">' + a.e.lib + '</span>';
+    if (a.derog) tags += '<span class="pastille-etat e-cours">Dérogation ' + h(a.derog) + '</span>';
+    if (a.re === 1) tags += '<span class="pastille-etat e-ok">Reçue par l\'enquêteur</span>';
+    if (a.re === 0) tags += '<span class="pastille-etat e-corr">Pas encore reçue par l\'enquêteur</span>';
+    var qui = role >= 2 ? (a.enq ? '<b>' + h(a.enq) + '</b> · ' : '<b>Pas d\'enquêteur</b> · ') : '';
+    return '<div class="upi"><span class="n">Structure ' + h(a.u) + '</span><span class="d">' + qui + h(det) + '</span><span class="tags">' + tags + '</span></div>';
+  }
+
+  function afficher() {
+    var html = [], vus = 0, total = 0;
+    groupes.forEach(function (gr) {
+      var upis = gr.upis.filter(correspond);
+      if (!upis.length) return;
+      total++;
+      if (vus >= limite) return;
+      vus++;
+      var fin = gr.upis.filter(function (a) { return a.e.k === "fin"; }).length;
+      var actifs = gr.upis.filter(function (a) { return !a.retiree; }).length;
+      var pct = actifs ? Math.round(100 * fin / actifs) : 0;
+      var ouvert = ouverts[gr.g] || texte !== "" || filtre !== "tous";
+      var sous = gr.upis.length + " structure" + (gr.upis.length > 1 ? "s" : "");
+      if (role >= 3 && gr.ctr) sous += " · Contrôleur " + gr.ctr;
+      var recu = "";
+      if (role >= 3 && gr.ctr) recu = gr.rc === 1 ? '<span class="pastille-etat e-ok">Reçue par le contrôleur</span>' : '<span class="pastille-etat e-corr">Pas encore reçue par le contrôleur</span>';
+      html.push('<article class="grappe' + (ouvert ? ' ouverte' : '') + '">' +
+        '<button type="button" class="g-tete" data-g="' + h(gr.g) + '" aria-expanded="' + (ouvert ? "true" : "false") + '">' +
+          '<span class="g-nom"><b>Zone <span class="code">' + h(gr.g) + '</span></b><span>' + h(sous) + '</span></span>' +
+          '<span class="g-prog"><span class="piste"><i style="width:' + pct + '%"></i></span><small>' + fin + ' / ' + actifs + ' terminées</small></span>' +
+          recu + CHEVRON +
+        '</button>' +
+        (ouvert ? '<div class="upis">' + upis.map(ligneUpi).join("") + '</div>' : '') +
+      '</article>');
+    });
+    if (!total) {
+      html.push(donnees.length ? '<div class="vide"><b>Aucune structure ne correspond.</b>Changez la recherche ou le filtre.</div>'
+                               : '<div class="vide"><b>Aucune structure ne vous est assignée pour le moment.</b>Vos assignations arriveront à la prochaine synchronisation.</div>');
+    }
+    if (total > vus) {
+      html.push('<button type="button" class="btn plus" id="plus">Afficher plus de zones (' + (total - vus) + ' restantes)</button>');
+    }
+    $("grappes").innerHTML = html.join("");
+    var p = $("plus");
+    if (p) p.addEventListener("click", function () { limite += 60; afficher(); });
+  }
+
+  $("filtres").innerHTML = FILTRES.map(function (f) {
+    return '<button type="button" class="filtre" data-f="' + f[0] + '" aria-pressed="' + (f[0] === filtre) + '">' + f[1] + '</button>';
+  }).join("");
+  $("filtres").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-f]"); if (!b) return;
+    filtre = b.getAttribute("data-f");
+    Array.prototype.forEach.call(document.querySelectorAll(".filtre"), function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    limite = 60; afficher();
+  });
+  $("recherche").addEventListener("input", function () { texte = this.value.trim().toUpperCase(); limite = 60; afficher(); });
+  $("grappes").addEventListener("click", function (e) {
+    var t = e.target.closest(".g-tete"); if (!t) return;
+    var g = t.getAttribute("data-g");
+    ouverts[g] = !ouverts[g];
+    afficher();
+  });
+
+  function erreur(msg) {
+    $("sous-titre").textContent = "";
+    $("outils").classList.add("cache");
+    $("grappes").innerHTML = '<div class="message message-erreur"><span><b>La liste n\'a pas pu être lue.</b> ' + h(msg) + '</span></div>' +
+      '<button type="button" class="btn btn-principal" id="classique" style="align-self:flex-start">Afficher l\'ancienne liste</button>';
+    $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+  }
+
+  function demarrer(liste) {
+    donnees = Array.isArray(liste) ? liste : [];
+    regrouper(); resume(); afficher();
+  }
+
+  if (apercu) {
+    demarrer(exemple());
+  } else {
+    fetch(entree.fichier + "?t=" + Date.now()).then(function (r) {
+      if (!r.ok) throw new Error("fichier introuvable (" + r.status + ")");
+      return r.text();
+    }).then(function (t) {
+      demarrer(JSON.parse(t.replace(/^﻿/, "")));
+    }).catch(function (e) { erreur(e && e.message ? e.message : String(e)); });
+  }
+})();
+</script>
+</body>
+</html>

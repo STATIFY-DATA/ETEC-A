@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  body { min-height: 100vh; }
+  .ecran { display: flex; flex-wrap: wrap; min-height: 100vh; }
+  .gauche { flex: 1 1 420px; background: var(--vert-nuit); color: var(--texte-nuit); padding: 48px 56px; display: flex; flex-direction: column; justify-content: space-between; gap: 40px; position: relative; overflow: hidden; }
+  .gauche svg.cercles { position: absolute; right: -130px; top: -90px; width: 440px; height: 440px; opacity: 0.55; pointer-events: none; }
+  .marque { display: flex; align-items: center; gap: 14px; position: relative; }
+  .marque b { display: block; font-family: var(--titre); font-size: 19px; color: #FFFFFF; }
+  .marque span { font-size: 13px; color: var(--texte-nuit-2); }
+  .accroche { position: relative; max-width: 480px; }
+  .accroche h1 { margin: 0 0 14px; font-family: var(--titre); font-weight: 600; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em; color: #FFFFFF; }
+  .accroche p { margin: 0; font-size: 16px; line-height: 1.55; color: #C8D7D2; }
+  .roles { display: flex; flex-direction: column; gap: 10px; position: relative; max-width: 480px; }
+  .role { display: flex; gap: 14px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--vert-nuit-2); }
+  .role i { width: 38px; height: 38px; border-radius: 11px; background: var(--vert-nuit-3); color: var(--ambre); display: flex; align-items: center; justify-content: center; flex: none; }
+  .role i svg { width: 19px; height: 19px; }
+  .role b { display: block; font-size: 14px; color: #FFFFFF; }
+  .role span { font-size: 13px; color: var(--texte-nuit-2); }
+
+  .droite { flex: 1 1 420px; display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+  .bloc { width: 100%; max-width: 410px; display: flex; flex-direction: column; gap: 20px; }
+  .bloc h2 { margin: 0 0 6px; font-family: var(--titre); font-weight: 600; font-size: 30px; letter-spacing: -0.02em; }
+  .bloc .sous { margin: 0; font-size: 15px; color: var(--gris); }
+  form { display: flex; flex-direction: column; gap: 18px; }
+  .champ-code { position: relative; }
+  .champ-code input { padding-right: 64px; }
+  .voir { position: absolute; right: 6px; bottom: 5px; min-height: 44px; min-width: 52px; border: none; background: none; color: var(--accent); font-weight: 700; font-size: 13px; cursor: pointer; }
+  .pied { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; border-top: 1px solid var(--bord); padding-top: 10px; }
+  .pied small { color: var(--gris-clair); font-size: 12.5px; }
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  .verrou-titre { display: flex; align-items: center; gap: 12px; }
+  .verrou-titre i { width: 46px; height: 46px; border-radius: 14px; background: var(--orange-doux); color: var(--orange); display: flex; align-items: center; justify-content: center; flex: none; }
+  .verrou-titre i svg { width: 22px; height: 22px; }
+
+  @media (max-width: 760px) {
+    .gauche { flex-basis: 100%; padding: 22px 20px; gap: 14px; }
+    .gauche svg.cercles, .roles { display: none; }
+    .accroche h1 { font-size: 26px; margin-bottom: 6px; }
+    .accroche p { font-size: 14px; }
+    .droite { padding: 24px 18px 32px; align-items: flex-start; }
+    .bloc h2 { font-size: 25px; }
+  }
+</style>
+</head>
+<body>
+<div class="ecran">
+
+  <section class="gauche" aria-hidden="false">
+    <svg class="cercles" viewBox="0 0 400 400" aria-hidden="true">
+      <circle cx="200" cy="200" r="190" fill="none" stroke="#1F4A43" stroke-width="1.5"/>
+      <circle cx="200" cy="200" r="140" fill="none" stroke="#1F4A43" stroke-width="1.5"/>
+      <circle cx="200" cy="200" r="90" fill="none" stroke="#1F4A43" stroke-width="1.5"/>
+      <circle cx="200" cy="200" r="40" fill="none" stroke="#2A5952" stroke-width="1.5"/>
+    </svg>
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <div class="accroche">
+      <h1>Bienvenue sur l'application de collecte.</h1>
+      <p>Connectez-vous avec votre identifiant d'agent et votre code personnel.</p>
+    </div>
+    <div class="roles">
+      <div class="role"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6l1 3h3a1 1 0 0 1 1 1v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a1 1 0 0 1 1-1h3l1-3z"/><path d="M9 13l2 2 4-4"/></svg></i><div><b>Enquêteur</b><span>Remplit les questionnaires de ses structures</span></div></div>
+      <div class="role"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.6c1.9.7 3.1 2.6 3.5 5.4"/></svg></i><div><b>Contrôleur</b><span>Contrôle et valide le travail de son équipe</span></div></div>
+      <div class="role"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M6 17v-6M11 17V5M16 17V9"/></svg></i><div><b>Superviseurs</b><span>Suivent la région ou l'ensemble de l'enquête</span></div></div>
+    </div>
+  </section>
+
+  <section class="droite">
+    <div class="bloc">
+
+      <!-- 1. Formulaire de connexion -->
+      <div id="vue-connexion" class="bloc" style="gap: 20px">
+        <div>
+          <h2>Connexion</h2>
+          <p class="sous">Saisissez votre identifiant et votre code personnel.</p>
+        </div>
+        <form id="form-connexion" novalidate>
+          <label class="champ">Identifiant d'agent
+            <input id="identifiant" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="ex. CTR001">
+          </label>
+          <label class="champ champ-code">Code personnel
+            <input id="code" type="password" inputmode="numeric" autocomplete="current-password" maxlength="10" placeholder="••••">
+            <button type="button" class="voir" id="voir-code" aria-label="Afficher le code">Voir</button>
+          </label>
+          <div id="msg-connexion" class="message message-erreur cache" role="alert"></div>
+          <button type="submit" class="btn btn-principal btn-large" id="btn-connexion">Se connecter
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+        <div class="message message-info">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <span id="texte-essais">Après 3 codes incorrects, le compte est verrouillé.</span>
+        </div>
+      </div>
+
+      <!-- 2. Compte verrouillé -->
+      <div id="vue-verrou" class="bloc cache" style="gap: 18px">
+        <div class="verrou-titre">
+          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></i>
+          <div><h2 style="margin: 0">Compte verrouillé</h2><p class="sous" id="verrou-agent"></p></div>
+        </div>
+        <p class="sous" style="color: var(--encre)">Contactez votre contrôleur ou votre superviseur pour le réactiver. Il peut vous dicter un code de déblocage, ou débloquer votre compte sur le serveur.</p>
+        <form id="form-deblocage" novalidate>
+          <label class="champ">Code de déblocage (6 chiffres)
+            <input id="code-deblocage" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="ex. 482913">
+          </label>
+          <div id="msg-verrou" class="message message-erreur cache" role="alert"></div>
+          <button type="submit" class="btn btn-principal btn-large" id="btn-deblocage">Débloquer avec ce code</button>
+        </form>
+        <div class="actions">
+          <button type="button" class="btn btn-large" id="btn-serveur">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+            Vérifier un déblocage sur le serveur (internet)
+          </button>
+          <button type="button" class="lien" id="btn-retour">Revenir à la connexion</button>
+        </div>
+      </div>
+
+      <!-- 3. Arrêt (accès bloqué) -->
+      <div id="vue-arret" class="bloc cache" style="gap: 18px">
+        <div class="verrou-titre">
+          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/></svg></i>
+          <h2 style="margin: 0">Accès impossible</h2>
+        </div>
+        <div id="msg-arret" class="message message-erreur" role="alert"></div>
+        <button type="button" class="btn btn-principal btn-large" id="btn-arret">Fermer l'application</button>
+      </div>
+
+      <div class="pied">
+        <small id="version">ETEC_A · écrans modernes</small>
+        <span>
+          <button type="button" class="lien" id="btn-classique">Écrans classiques</button>
+          <button type="button" class="lien" id="btn-quitter">Quitter</button>
+        </span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var entree = ETEC.donnees() || {};
+  var agentVerrouille = "";
+
+  if (!ETEC.dansCSPro()) { ETEC.apercu(); }
+  if (entree.maxEssais) {
+    $("texte-essais").textContent = "Après " + entree.maxEssais + " codes incorrects, le compte est verrouillé.";
+  }
+  if (entree.version) { $("version").textContent = entree.version; }
+
+  function montrer(vue) {
+    ["vue-connexion", "vue-verrou", "vue-arret"].forEach(function (v) { $(v).classList.toggle("cache", v !== vue); });
+  }
+  function message(id, texte, type) {
+    var m = $(id);
+    m.className = "message " + (type === "ok" ? "message-ok" : type === "info" ? "message-info" : "message-erreur");
+    m.textContent = texte;
+    m.classList.toggle("cache", !texte);
+  }
+  function occupe(bouton, oui, texteAttente) {
+    if (oui) {
+      bouton.dataset.texte = bouton.innerHTML;
+      bouton.disabled = true;
+      bouton.innerHTML = '<span class="rond" aria-hidden="true"></span>' + ETEC.html(texteAttente || "Vérification…");
+    } else if (bouton.dataset.texte) {
+      bouton.disabled = false;
+      bouton.innerHTML = bouton.dataset.texte;
+    }
+  }
+  function arret(texte) {
+    $("msg-arret").textContent = texte;
+    montrer("vue-arret");
+    $("btn-arret").focus();
+  }
+
+  /* Aperçu hors CSPro : réponses d'exemple, sans aucune règle */
+  function appeler(fonction, args) {
+    if (ETEC.dansCSPro()) return ETEC.appeler(fonction, args);
+    return new Promise(function (ok) {
+      setTimeout(function () {
+        if (fonction === "CONNECTER") {
+          if (args.p_id === "BLOQ01") ok({ etat: "VERROUILLE", message: "Compte verrouillé. Contactez votre contrôleur ou votre superviseur pour le réactiver." });
+          else if (args.p_code === "1234") ok({ etat: "OK", message: "Connexion réussie." });
+          else ok({ etat: "CODE_FAUX", message: "Code personnel incorrect. Tentative 1 sur 3." });
+        } else if (fonction === "DEBLOQUER_AVEC_CODE") {
+          ok({ etat: "FAUX", message: "Code de déblocage incorrect. Tentative 1 sur 3." });
+        } else { ok(0); }
+      }, 500);
+    });
+  }
+
+  /* 1. Connexion */
+  $("identifiant").addEventListener("input", function () {
+    var pos = this.selectionStart;
+    this.value = this.value.toUpperCase();
+    try { this.setSelectionRange(pos, pos); } catch (e) {}
+  });
+  $("voir-code").addEventListener("click", function () {
+    var c = $("code");
+    var visible = c.type === "text";
+    c.type = visible ? "password" : "text";
+    this.textContent = visible ? "Voir" : "Masquer";
+    this.setAttribute("aria-label", visible ? "Afficher le code" : "Masquer le code");
+  });
+
+  $("form-connexion").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var id = $("identifiant").value.trim().toUpperCase();
+    var code = $("code").value.trim();
+    if (!id) { message("msg-connexion", "Saisissez votre identifiant d'agent."); $("identifiant").focus(); return; }
+    if (!code) { message("msg-connexion", "Saisissez votre code personnel."); $("code").focus(); return; }
+    var b = $("btn-connexion");
+    occupe(b, true, "Vérification…");
+    message("msg-connexion", "");
+    appeler("CONNECTER", { p_id: id, p_code: code }).then(function (r) {
+      occupe(b, false);
+      var etat = r && r.etat;
+      var texte = (r && r.message) || "";
+      if (etat === "OK") {
+        message("msg-connexion", texte || "Connexion réussie.", "ok");
+        occupe(b, true, "Ouverture…");
+        ETEC.fermer("OK");
+      } else if (etat === "VERROUILLE") {
+        agentVerrouille = id;
+        $("verrou-agent").textContent = "Agent " + id;
+        $("code-deblocage").value = "";
+        message("msg-verrou", "");
+        montrer("vue-verrou");
+        $("code-deblocage").focus();
+      } else if (etat === "BLOQUE_SESSION" || etat === "COMPTE_VERROUILLE" || etat === "ZONE_MANQUANTE") {
+        arret(texte);
+      } else {
+        message("msg-connexion", texte || "Connexion impossible.");
+        $("code").value = "";
+        if (etat === "INCONNU" || etat === "INTROUVABLE") { $("identifiant").select(); $("identifiant").focus(); }
+        else { $("code").focus(); }
+      }
+    }).catch(function (err) {
+      occupe(b, false);
+      message("msg-connexion", "La page n'a pas pu joindre l'application : " + (err && err.message ? err.message : err) + ". Utilisez les écrans classiques.");
+    });
+  });
+
+  /* 2. Déblocage avec un code */
+  $("form-deblocage").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var code = $("code-deblocage").value.trim();
+    if (!/^\d{6}$/.test(code)) { message("msg-verrou", "Le code de déblocage contient 6 chiffres."); $("code-deblocage").focus(); return; }
+    var b = $("btn-deblocage");
+    occupe(b, true, "Vérification…");
+    appeler("DEBLOQUER_AVEC_CODE", { p_id: agentVerrouille, p_code: code }).then(function (r) {
+      occupe(b, false);
+      var etat = r && r.etat;
+      if (etat === "OK") {
+        montrer("vue-connexion");
+        $("identifiant").value = agentVerrouille;
+        $("code").value = "";
+        message("msg-connexion", r.message, "ok");
+        $("code").focus();
+      } else if (etat === "EPUISE") {
+        arret(r.message);
+      } else if (etat === "INTROUVABLE") {
+        montrer("vue-connexion");
+        message("msg-connexion", r.message);
+      } else {
+        message("msg-verrou", (r && r.message) || "Code de déblocage incorrect.");
+        $("code-deblocage").select();
+      }
+    }).catch(function (err) {
+      occupe(b, false);
+      message("msg-verrou", "Erreur : " + (err && err.message ? err.message : err));
+    });
+  });
+
+  /* 2 bis. Déblocage par le serveur (la logique affiche ses propres messages) */
+  $("btn-serveur").addEventListener("click", function () {
+    var b = this;
+    occupe(b, true, "Connexion au serveur…");
+    appeler("VERIFIER_DEBLOCAGE_SERVEUR", { p_id: agentVerrouille }).then(function (r) {
+      occupe(b, false);
+      if (Number(r) === 1) {
+        montrer("vue-connexion");
+        $("identifiant").value = agentVerrouille;
+        $("code").value = "";
+        message("msg-connexion", "Votre compte a été débloqué par votre responsable. Saisissez maintenant votre code personnel.", "ok");
+        $("code").focus();
+      } else {
+        message("msg-verrou", "Aucun déblocage reçu pour le moment. Réessayez plus tard, ou demandez un code de déblocage par téléphone.", "info");
+      }
+    }).catch(function (err) {
+      occupe(b, false);
+      message("msg-verrou", "Erreur : " + (err && err.message ? err.message : err));
+    });
+  });
+
+  $("btn-retour").addEventListener("click", function () { montrer("vue-connexion"); $("identifiant").focus(); });
+  $("btn-arret").addEventListener("click", function () { ETEC.fermer("ARRET"); });
+  $("btn-quitter").addEventListener("click", function () { ETEC.fermer("ARRET"); });
+  $("btn-classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+
+  $("identifiant").focus();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contrôle qualité — ETEC_A</title>
+<link rel="stylesheet" href="etec.css">
+<style>
+  .outils { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .outils input[type=search] { flex: 1 1 240px; min-height: 44px; border-radius: 12px; border: 1.5px solid #D2D8CE; background: #FFFFFF; padding: 0 14px; font-size: 15px; font-family: var(--texte); }
+  .outils label.coche { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+  .outils label.coche input { width: 18px; height: 18px; }
+  .liste { display: flex; flex-direction: column; gap: 10px; }
+  .q { background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .q.verif { border-left: 4px solid var(--orange); }
+  .q.n2 { border-left: 4px solid #B42318; }
+  .q.n1 { border-left: 4px solid var(--orange); }
+  .q.n0 { border-left: 4px solid #1F7A5C; }
+  .voyant { display: inline-flex; align-items: center; gap: 7px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  .voyant i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .voyant.n0 { background: var(--accent-doux); color: #14523F; } .voyant.n0 i { background: #1F7A5C; }
+  .voyant.n1 { background: var(--orange-doux); color: var(--orange-texte); } .voyant.n1 i { background: var(--orange); }
+  .voyant.n2 { background: #FDE8E7; color: #8F1D14; } .voyant.n2 i { background: #B42318; }
+  .raisons { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .raisons li { font-size: 13.5px; padding: 8px 12px; border-radius: 10px; background: #FAFBF8; border: 1px solid var(--bord-doux); }
+  .raisons li b { color: var(--encre); }
+  .raisons li .ou { display: block; color: var(--gris); font-size: 12.5px; margin-top: 2px; }
+  .synthese { display: flex; flex-wrap: wrap; gap: 8px; }
+  .synthese button { border: 1px solid var(--bord); background: var(--surface); border-radius: 999px; min-height: 38px; padding: 0 14px; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; gap: 8px; align-items: center; color: var(--encre); }
+  .synthese button[aria-pressed="true"] { background: var(--vert-nuit); border-color: var(--vert-nuit); color: #FFFFFF; }
+  .synthese button i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .q-tete { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; }
+  .q-tete b { font-size: 15.5px; }
+  .q-infos { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13.5px; color: var(--gris); }
+  .q-infos span b { color: var(--encre); font-weight: 600; }
+  .q-alerte { font-size: 13.5px; padding: 8px 12px; border-radius: 10px; background: var(--orange-doux); color: var(--orange-texte); }
+  .q-sup { font-size: 13.5px; padding: 8px 12px; border-radius: 10px; background: var(--bleu-doux); color: var(--bleu-texte); }
+  .q-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .q-form { border-top: 1px solid var(--bord-doux); padding-top: 12px; }
+  .q-form .aide { font-size: 13px; color: var(--gris); margin: 0 0 8px; }
+  .vide { text-align: center; padding: 34px 20px; color: var(--gris); background: var(--surface); border: 1px dashed var(--bord); border-radius: 16px; }
+  .vide b { display: block; color: var(--encre); font-size: 16px; margin-bottom: 4px; }
+  .histo { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--bord); border-radius: 16px; }
+  .histo li { padding: 11px 16px; border-bottom: 1px solid var(--bord-doux); font-size: 14px; display: flex; flex-direction: column; gap: 2px; }
+  .histo li:last-child { border-bottom: none; }
+  .histo .m { font-size: 12.5px; color: var(--gris); }
+  @media (max-width: 640px) { .q-actions .btn { flex: 1 1 100%; } }
+</style>
+</head>
+<body>
+<header class="barre barre-fixe">
+  <div class="barre-int">
+    <div class="marque">
+      <div class="logo">EA</div>
+      <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
+    </div>
+    <button type="button" class="btn-retour" id="retour">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      Accueil
+    </button>
+  </div>
+</header>
+
+<main class="page">
+  <section class="page-titre">
+    <h1>Contrôle qualité</h1>
+    <p id="sous-titre"></p>
+  </section>
+
+  <div id="resultat" class="cache" aria-live="polite"></div>
+
+  <nav class="onglets" role="tablist" id="onglets" aria-label="Listes"></nav>
+
+  <section class="outils" id="outils">
+    <input id="recherche" type="search" placeholder="Rechercher une zone ou un agent" aria-label="Rechercher une zone ou un agent" autocomplete="off">
+    <div class="synthese" id="synthese" role="group" aria-label="Filtrer par voyant"></div>
+  </section>
+
+  <section id="contenu" aria-live="polite"></section>
+
+  <section class="lien-bas">
+    <button type="button" class="lien" id="classique">Utiliser les écrans classiques</button>
+  </section>
+</main>
+
+<script src="/action-invoker.js"></script>
+<script src="etec.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var h = ETEC.html;
+  var n = function (v) { var x = Number(v); return isFinite(x) ? x : 0; };
+  var d = ETEC.donnees();
+  var apercu = !d || typeof d !== "object";
+  if (apercu) {
+    ETEC.apercu();
+    d = { role: 3, agent: "SUP001",
+          controle: [{ g: "020101", u: "03", i: "01", enq: "ENQ001", ctr: "CTR001", flag: 1, nbAv: 2, codes: "A06 A08", score: 72, duree: 18, sup: 0, motifSup: "", date: "12/10/2026 15:40" },
+                     { g: "020101", u: "05", i: "01", enq: "ENQ002", ctr: "CTR001", flag: 0, nbAv: 0, codes: "", score: 96, duree: 41, sup: 1, motifSup: "Vérifier le revenu déclaré", date: "12/10/2026 17:02" }],
+          approbation: [{ g: "020102", u: "01", i: "01", enq: "ENQ001", ctr: "CTR001", flag: 0, nbAv: 0, codes: "", score: 90, duree: 35, sup: 0, motifSup: "", date: "11/10/2026 10:12" }],
+          historique: [{ dh: 202610121700, d: "12/10/2026 17:00", t: 5, tl: "Changement de statut", a: "CTR001", s: 1, g: "020101", u: "02", i: "01", c: "VALIDATION", x: "Questionnaire validé par le contrôleur" }] };
+  }
+  var role = n(d.role);
+  var modifie = false;   /* décisions prises depuis le dernier chargement */
+  $("retour").addEventListener("click", function () { ETEC.fermer("RETOUR"); });
+  $("classique").addEventListener("click", function () { ETEC.fermer("CLASSIQUE"); });
+  $("sous-titre").textContent = role === 2 ? "Questionnaires terminés de votre équipe" : role === 4 ? "Questionnaires validés de votre région" : "Contrôle et approbation de toute l'enquête";
+
+  /* Onglets selon le rôle (mêmes droits que le menu classique) */
+  var ONGLETS = [];
+  if (role === 2 || role === 3) ONGLETS.push({ k: "controle", lib: "À contrôler" });
+  if (role === 3 || role === 4) ONGLETS.push({ k: "approbation", lib: "À approuver" });
+  ONGLETS.push({ k: "historique", lib: "Historique" });
+  var actif = ONGLETS[0].k;
+  var ouvert = null;   /* questionnaire dont le formulaire est ouvert : { cle, action } */
+  var occupe = false;
+
+  function cle(q) { return q.g + "-" + q.u + "-" + q.i; }
+  /* Voyant : 0 aucun problème détecté, 1 à vérifier, 2 problème probable */
+  var NIVEAUX = ["Aucun problème détecté", "À vérifier", "Problème probable"];
+  var COULEURS = ["#1F7A5C", "var(--orange)", "#B42318"];
+  var filtreNiveau = "", limite = 50;
+  function niveau(q) {
+    var v = Number(q.niveau);
+    if (v === 0 || v === 1 || v === 2) return v;
+    return n(q.flag) === 1 ? 1 : 0;
+  }
+  function afficherSynthese() {
+    var l = liste(actif), c = [0, 0, 0];
+    l.forEach(function (x) { c[niveau(x)]++; });
+    var bt = function (val, lib, coul, nb) {
+      return '<button type="button" data-niveau="' + val + '" aria-pressed="' + (filtreNiveau === val) + '">' + (coul ? '<i style="background:' + coul + '"></i>' : '') + lib + ' (' + nb + ')</button>';
+    };
+    $("synthese").innerHTML = bt("", "Tous", "", l.length) + bt("2", NIVEAUX[2], COULEURS[2], c[2]) + bt("1", NIVEAUX[1], COULEURS[1], c[1]) + bt("0", NIVEAUX[0], COULEURS[0], c[0]);
+  }
+  function liste(k) { return Array.isArray(d[k]) ? d[k] : []; }
+
+  function afficherOnglets() {
+    $("onglets").innerHTML = ONGLETS.map(function (o) {
+      var nb = o.k === "historique" ? "" : '<span class="nb">' + liste(o.k).length + '</span>';
+      return '<button type="button" class="onglet" role="tab" aria-selected="' + (o.k === actif) + '" data-onglet="' + o.k + '">' + o.lib + nb + '</button>';
+    }).join("");
+    $("outils").classList.toggle("cache", actif === "historique");
+  }
+
+  function carte(q, mode) {
+    var c = cle(q);
+    var infos = '<span>Enquêteur <b>' + h(q.enq) + '</b></span><span>Contrôleur <b>' + h(q.ctr || "—") + '</b></span>' +
+      (q.date && q.date !== "-" ? '<span>Dernière visite <b>' + h(q.date) + '</b></span>' : '') +
+      (n(q.score) >= 0 ? '<span>Score <b>' + n(q.score) + ' / 100</b></span>' : '') +
+      (n(q.duree) >= 0 ? '<span>Durée <b>' + n(q.duree) + ' min</b></span>' : '');
+    /* Voyant et raisons calculés par l'application (DIAGNOSTIC_QUESTIONNAIRE) */
+    var nv = niveau(q);
+    var raisons = Array.isArray(q.raisons) ? q.raisons : [];
+    var alerte = raisons.length ? '<ul class="raisons">' + raisons.map(function (r) {
+      return '<li><b>' + h(r.code) + ' · ' + h(r.texte) + '</b><span class="ou">Où regarder : ' + h(r.ou) + '</span></li>';
+    }).join("") + '</ul>' : '';
+    var sup = (mode === "controle" && n(q.sup) === 1) ? '<div class="q-sup"><b>Renvoyé par le superviseur :</b> ' + h(q.motifSup) + '</div>' : '';
+    var boutons = mode === "controle"
+      ? '<button type="button" class="btn btn-principal btn-petit" data-action="1" data-q="' + c + '">Valider</button>' +
+        '<button type="button" class="btn btn-petit" data-action="2" data-q="' + c + '">Renvoyer pour correction</button>' +
+        '<button type="button" class="btn btn-danger btn-petit" data-action="3" data-q="' + c + '">Rejeter</button>'
+      : '<button type="button" class="btn btn-principal btn-petit" data-action="1" data-q="' + c + '">Approuver</button>' +
+        '<button type="button" class="btn btn-petit" data-action="2" data-q="' + c + '">Renvoyer au contrôleur</button>';
+    var form = "";
+    if (ouvert && ouvert.cle === c) form = formulaire(q, mode, ouvert.action);
+    return '<article class="q n' + nv + '">' +
+      '<div class="q-tete"><b>Zone <span class="code">' + h(q.g) + '</span> · Structure ' + h(q.u) + ' · Répondant ' + h(q.i) + '</b>' +
+      '<span class="voyant n' + nv + '"><i></i>' + NIVEAUX[nv] + '</span></div>' +
+      '<div class="q-infos">' + infos + '</div>' + alerte + sup +
+      (form ? form : '<div class="q-actions">' + boutons + '</div>') + '</article>';
+  }
+
+  function formulaire(q, mode, action) {
+    var c = cle(q);
+    var annuler = '<button type="button" class="btn btn-petit" data-annuler="1">Annuler</button>';
+    if (mode === "controle" && action === "2") {
+      return '<div class="q-form"><p class="aide">L\'enquêteur retrouvera ce questionnaire dans sa liste « à corriger », avec votre explication.</p>' +
+        '<div class="formulaire">' +
+        '<label class="champ">Code de l\'erreur<input id="f-code" maxlength="10" value="' + h(ouvert.code !== undefined ? ouvert.code : (String(q.codes || "").split(/\s+/)[0] || "")) + '" placeholder="ex. A01 ou AUTRE"></label>' +
+        '<label class="champ large">Ce que l\'enquêteur doit corriger (obligatoire)<textarea id="f-motif" maxlength="100">' + h(ouvert.motif || "") + '</textarea></label>' +
+        '<div class="q-actions"><button type="button" class="btn btn-principal btn-petit" data-confirmer="' + c + '">Renvoyer à l\'enquêteur</button>' + annuler + '</div></div></div>';
+    }
+    if (mode === "approbation" && action === "2") {
+      return '<div class="q-form"><p class="aide">Le contrôleur retrouvera ce questionnaire dans sa liste « à contrôler », avec votre motif.</p>' +
+        '<div class="formulaire"><label class="champ large">Ce que le contrôleur doit revoir (obligatoire)<textarea id="f-motif" maxlength="100">' + h(ouvert.motif || "") + '</textarea></label>' +
+        '<div class="q-actions"><button type="button" class="btn btn-principal btn-petit" data-confirmer="' + c + '">Renvoyer au contrôleur</button>' + annuler + '</div></div></div>';
+    }
+    var libs = mode === "controle" ? { "1": "Confirmer la validation", "3": "Confirmer le rejet" } : { "1": "Confirmer l'approbation" };
+    return '<div class="q-form"><p class="aide">' + (action === "3" ? "Un questionnaire rejeté ne sera plus corrigé ni compté comme validé." : "Vérifiez votre choix avant de confirmer.") + '</p>' +
+      '<div class="q-actions"><button type="button" class="btn ' + (action === "3" ? 'btn-danger' : 'btn-principal') + ' btn-petit" data-confirmer="' + c + '">' + libs[action] + '</button>' + annuler + '</div></div>';
+  }
+
+  function afficher() {
+    afficherOnglets();
+    if (actif === "historique") {
+      var hl = liste("historique").slice().sort(function (a, b) { return n(b.dh) - n(a.dh); });
+      $("contenu").innerHTML = hl.length ? '<ul class="histo">' + hl.map(function (e) {
+        return '<li><span><b>' + h(e.c || e.tl) + '</b> · Zone ' + h(e.g) + ' · Structure ' + h(e.u) + ' · Répondant ' + h(e.i) + '</span>' +
+          '<span>' + h(e.x) + '</span><span class="m">' + h(e.d) + ' · ' + h(e.a) + ' · ' + h(e.tl) + '</span></li>';
+      }).join("") + '</ul>' : '<div class="vide"><b>Aucune décision enregistrée</b>Les validations, renvois, rejets et corrections apparaîtront ici.</div>';
+      return;
+    }
+    var q = $("recherche").value.trim().toUpperCase();
+    afficherSynthese();
+    var l = liste(actif).filter(function (x) {
+      if (filtreNiveau !== "" && String(niveau(x)) !== filtreNiveau) return false;
+      if (!q) return true;
+      return (x.g + " " + x.enq + " " + x.ctr + " " + x.g + "-" + x.u).toUpperCase().indexOf(q) >= 0;
+    }).sort(function (a, b) {
+      return niveau(b) - niveau(a) || String(a.g).localeCompare(String(b.g)) || String(a.u).localeCompare(String(b.u)) || String(a.i).localeCompare(String(b.i));
+    });
+    var total = l.length;
+    l = l.slice(0, limite);
+    if (!liste(actif).length) {
+      $("contenu").innerHTML = '<div class="vide"><b>' + (actif === "controle" ? "Aucun questionnaire terminé en attente de contrôle" : "Aucun questionnaire validé en attente d'approbation") + '</b>La liste se met à jour après chaque synchronisation.</div>';
+      return;
+    }
+    $("contenu").innerHTML = l.length ? '<div class="liste">' + l.map(function (x) { return carte(x, actif); }).join("") + '</div>' +
+        (total > l.length ? '<p style="text-align:center"><button type="button" class="lien" data-plus="1">Afficher plus (' + (total - l.length) + ' de plus)</button></p>' : '')
+      : '<div class="vide"><b>Aucun résultat</b>Modifiez la recherche ou le filtre.</div>';
+  }
+
+  function trouver(c) {
+    var l = liste(actif);
+    for (var i = 0; i < l.length; i++) if (cle(l[i]) === c) return l[i];
+    return null;
+  }
+
+  /* Les listes sont écrites par l'application dans un fichier (donnees/controle.json) */
+  function chargerFichier(entree) {
+    if (!entree || !entree.fichier) return Promise.resolve();
+    return fetch(entree.fichier + "?t=" + Date.now()).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (x) {
+      d.controle = Array.isArray(x.controle) ? x.controle : [];
+      d.approbation = Array.isArray(x.approbation) ? x.approbation : [];
+      d.historique = Array.isArray(x.historique) ? x.historique : [];
+      modifie = false;
+    });
+  }
+  function rafraichir() {
+    if (!ETEC.dansCSPro()) return Promise.resolve();
+    return ETEC.appeler("DONNEES_CONTROLE", {}).then(chargerFichier);
+  }
+  /* Décision enregistrée : le questionnaire quitte la liste tout de suite, sans tout relire */
+  function retirer(q) {
+    var l = liste(actif), c = cle(q);
+    for (var i = 0; i < l.length; i++) if (cle(l[i]) === c) { l.splice(i, 1); break; }
+    modifie = true;
+  }
+
+  function decider(q) {
+    if (occupe) return;
+    var code = $("f-code") ? $("f-code").value.trim() : "";
+    var motif = $("f-motif") ? $("f-motif").value.trim() : "";
+    if ($("f-motif") && !motif) {
+      ETEC.bandeau($("resultat"), { etat: "ERREUR", message: actif === "controle" ? "La description de l'erreur est obligatoire pour un renvoi." : "Le motif est obligatoire pour renvoyer un questionnaire au contrôleur." });
+      $("f-motif").focus();
+      return;
+    }
+    ouvert.code = code; ouvert.motif = motif;
+    var args = { p_action: actif === "controle" ? "CONTROLE" : "APPROBATION", p_a: q.g, p_b: q.u, p_c: q.i, p_d: ouvert.action, p_e: code, p_f: motif };
+    if (!ETEC.dansCSPro()) {
+      ETEC.bandeau($("resultat"), { etat: "OK", message: "Aperçu : la décision serait enregistrée par l'application." });
+      ouvert = null; afficher(); return;
+    }
+    occupe = true;
+    ETEC.appeler("ACTION_HTML", args).then(function (r) {
+      ETEC.bandeau($("resultat"), r);
+      if (r && r.etat === "OK") { ouvert = null; retirer(q); return; }
+      /* Décision refusée : le formulaire reste ouvert ; la liste est relue (questionnaire peut-être déjà traité) */
+      return rafraichir();
+    }).catch(function (e) {
+      ETEC.bandeau($("resultat"), { etat: "ERREUR", message: "La décision n'a pas pu être envoyée à l'application : " + (e && e.message ? e.message : e) });
+    }).then(function () { occupe = false; afficher(); });
+  }
+
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest ? e.target.closest("button") : null;
+    if (!el) return;
+    if (el.hasAttribute("data-onglet")) {
+      actif = el.getAttribute("data-onglet"); ouvert = null; filtreNiveau = ""; limite = 50;
+      /* L'historique est relu s'il y a eu des décisions depuis l'ouverture de la page */
+      if (actif === "historique" && modifie && ETEC.dansCSPro() && !occupe) {
+        occupe = true;
+        $("contenu").innerHTML = '<div class="vide">Mise à jour de l\'historique…</div>';
+        rafraichir().catch(function () {}).then(function () { occupe = false; afficher(); });
+        return;
+      }
+      afficher(); return;
+    }
+    if (el.hasAttribute("data-action")) {
+      ouvert = { cle: el.getAttribute("data-q"), action: el.getAttribute("data-action") };
+      afficher();
+      var champ = $("f-motif") || document.querySelector("[data-confirmer]");
+      if (champ) champ.focus();
+      return;
+    }
+    if (el.hasAttribute("data-annuler")) { ouvert = null; afficher(); return; }
+    if (el.hasAttribute("data-confirmer")) { var q = trouver(el.getAttribute("data-confirmer")); if (q && ouvert) decider(q); }
+  });
+  $("recherche").addEventListener("input", afficher);
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-niveau],[data-plus]") : null;
+    if (!b) return;
+    if (b.hasAttribute("data-plus")) { limite += 50; afficher(); return; }
+    filtreNiveau = b.getAttribute("data-niveau"); limite = 50; afficher();
+  });
+  /* Premier affichage : lecture du fichier préparé par l'application */
+  if (d.fichier) {
+    $("contenu").innerHTML = '<div class="vide">Chargement des questionnaires…</div>';
+    chargerFichier(d).catch(function (e) {
+      ETEC.bandeau($("resultat"), { etat: "ERREUR", message: "La liste n'a pas pu être lue (" + (e && e.message ? e.message : e) + "). Utilisez les écrans classiques." });
+    }).then(afficher);
+  } else {
+    afficher();
+  }
+})();
+</script>
+</body>
+</html>
