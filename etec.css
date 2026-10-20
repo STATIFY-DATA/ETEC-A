@@ -56,7 +56,7 @@ button, input { font: inherit; }
 .cache { display: none !important; }
 
 /* Logo */
-.logo { width: 42px; height: 42px; border-radius: 12px; background: var(--ambre); color: var(--vert-nuit); display: flex; align-items: center; justify-content: center; font-family: var(--titre); font-weight: 700; font-size: 16px; flex: none; }
+.logo { display: block; width: 39px; height: 60px; object-fit: contain; border-radius: 0; flex: none; }
 
 /* Boutons */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 12px; border: 1px solid var(--bord); background: var(--surface); color: var(--encre); font-weight: 700; font-size: 15px; cursor: pointer; text-decoration: none; }
@@ -97,12 +97,12 @@ button, input { font: inherit; }
   .barre { background: var(--vert-nuit); color: var(--texte-nuit); }
   /* Pages intérieures : la barre (avec le bouton Accueil) reste visible en haut quand on fait défiler */
   .barre-fixe { position: sticky; top: 0; z-index: 30; box-shadow: 0 2px 10px rgba(15, 43, 39, 0.18); }
-  .barre-int { max-width: 1180px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .barre .marque { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .barre-int { max-width: 1180px; margin: 0 auto; padding: 14px 24px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; }
+  .barre .marque { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .barre .marque b { display: block; font-family: var(--titre); font-size: 17px; color: #FFFFFF; }
   .barre .marque span { font-size: 12.5px; color: var(--texte-nuit-2); }
   .agent { display: flex; align-items: center; gap: 10px; padding: 6px 14px 6px 6px; border-radius: 999px; background: var(--vert-nuit-2); }
-  .agent .av { width: 34px; height: 34px; border-radius: 50%; background: var(--texte-nuit); color: var(--vert-nuit); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; }
+  .agent .av { width: 34px; height: 34px; object-fit: cover; object-position: center; flex: none; border-radius: 50%; background: var(--texte-nuit); color: var(--vert-nuit); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; }
   .agent b { display: block; font-size: 13.5px; color: #FFFFFF; line-height: 1.2; }
   .agent span { font-size: 12px; color: var(--texte-nuit-2); }
   .btn-sortie { min-height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid #2A5952; background: transparent; color: var(--texte-nuit); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
@@ -124,7 +124,6 @@ button, input { font: inherit; }
   .e-gris { background: #F0F2EC; color: #3B4641; }
   @media (max-width: 640px) {
     .barre-int { padding: 12px 16px; }
-    .agent { order: 3; width: 100%; border-radius: 12px; }
     .page { padding: 18px 16px 28px; gap: 16px; }
     .page-titre h1 { font-size: 24px; }
     footer { padding: 0 16px 24px; }
@@ -157,4 +156,26 @@ button, input { font: inherit; }
   .formulaire .btn { width: 100%; }
   .tableau { font-size: 13px; }
   .tableau th, .tableau td { padding: 9px 8px; }
+}
+
+/* Navigation : la marque se reduit, les actions restent accessibles. */
+.barre .marque > div, .agent > div { min-width: 0; }
+.barre .marque span { display: block; overflow-wrap: anywhere; }
+.barre .logo { flex-shrink: 0; }
+.barre .btn-retour, .barre .btn-sortie { justify-content: center; min-width: 44px; flex-shrink: 0; }
+.barre .btn-retour svg, .barre .btn-sortie svg { flex-shrink: 0; }
+.barre button:focus-visible { outline: 3px solid #a8cfa2; outline-offset: 3px; }
+.page > *, .tableau-zone { min-width: 0; max-width: 100%; }
+.page-titre { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .barre-int { gap: 12px; padding: 10px 16px; }
+  .barre .logo { width: 29px; height: 45px; }
+  .barre .marque { gap: 9px; }
+  .barre .marque b { font-size: 16px; }
+  .barre .marque span { font-size: 11px; line-height: 1.4; }
+  .barre .btn-retour { padding: 0 10px; font-size: 13px; }
+  .page .btn { max-width: 100%; height: auto; padding-top: 10px; padding-bottom: 10px; white-space: normal; overflow-wrap: anywhere; }
+}
+@media (max-width: 380px) {
+  .barre .marque span { display: none; }
 }

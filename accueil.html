@@ -5,61 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Accueil — ETEC_A</title>
 <link rel="stylesheet" href="etec.css">
-<style>
-  main { max-width: 1180px; margin: 0 auto; padding: 26px 24px 40px; display: flex; flex-direction: column; gap: 22px; }
-  .salut h1 { margin: 0; font-family: var(--titre); font-weight: 600; font-size: 32px; letter-spacing: -0.02em; line-height: 1.1; }
-  .salut p { margin: 6px 0 0; color: var(--gris); font-size: 14.5px; }
-  .sync { display: inline-flex; align-items: center; gap: 8px; }
-  .point { width: 8px; height: 8px; border-radius: 50%; background: #1F9D7A; box-shadow: 0 0 0 4px #D5EFE6; flex: none; }
-  .point.attention { background: var(--orange); box-shadow: 0 0 0 4px var(--orange-doux); }
-
-  .avis { display: flex; flex-direction: column; gap: 10px; }
-  .liste-corr { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-  .liste-corr li { font-size: 13.5px; }
-
-  .chiffres { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-  .chiffre { background: var(--surface); border: 1px solid var(--bord); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-  .chiffre .l { font-size: 13px; font-weight: 600; color: var(--gris); }
-  .chiffre .v { font-family: var(--titre); font-size: 32px; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
-  .chiffre .v small { font-family: var(--texte); font-size: 14px; font-weight: 500; color: var(--gris); margin-left: 4px; letter-spacing: 0; }
-  .piste { height: 6px; border-radius: 99px; background: #E8EBE4; overflow: hidden; }
-  .piste i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
-
-  .section-t { margin: 4px 0 0; font-family: var(--titre); font-weight: 600; font-size: 19px; letter-spacing: -0.01em; }
-  .tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
-  .tuile { position: relative; display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 18px; border-radius: 16px; border: 1px solid var(--bord); background: var(--surface); color: var(--encre); cursor: pointer; min-height: 96px; width: 100%; }
-  .tuile:hover { border-color: #B9C9C2; box-shadow: 0 6px 18px rgba(15, 43, 39, 0.08); }
-  .tuile .ic { width: 46px; height: 46px; border-radius: 13px; background: var(--accent-doux); color: var(--accent); display: flex; align-items: center; justify-content: center; flex: none; }
-  .tuile .ic svg { width: 22px; height: 22px; }
-  .tuile b { display: block; font-size: 15.5px; line-height: 1.3; }
-  .tuile span.d { display: block; margin-top: 3px; font-size: 13px; color: var(--gris); line-height: 1.4; }
-  .tuile.avec-pastille { padding-right: 52px; }
-  .tuile .pastille { position: absolute; top: 14px; right: 14px; min-width: 26px; height: 24px; padding: 0 8px; border-radius: 99px; background: var(--ambre); color: var(--vert-nuit); font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-  .tuile.principale { grid-column: 1 / -1; background: var(--accent); border-color: var(--accent); color: #FFFFFF; align-items: center; min-height: 88px; }
-  .tuile.principale:hover { background: var(--accent-fonce); }
-  .tuile.principale .ic { background: rgba(255, 255, 255, 0.16); color: #FFFFFF; }
-  .tuile.principale span.d { color: #D5EFE6; }
-  .tuile.principale .fleche { margin-left: auto; width: 24px; height: 24px; flex: none; }
-
-
-  @media (max-width: 640px) {
-    main { padding: 18px 16px 28px; gap: 18px; }
-    .salut h1 { font-size: 25px; }
-    .chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .chiffre .v { font-size: 27px; }
-    .tuiles { grid-template-columns: 1fr; }
-  }
-</style>
+<link rel="stylesheet" href="accueil.css">
 </head>
-<body>
+<body class="accueil">
+<a class="evitement" href="#contenu">Aller au contenu</a>
 <header class="barre">
   <div class="barre-int">
     <div class="marque">
-      <div class="logo">EA</div>
+      <img class="logo" src="logo.jpg" alt="Institut national de la statistique" width="39" height="60">
       <div><b>ETEC_A</b><span>Collecte et suivi de la qualité</span></div>
     </div>
     <div class="agent">
-      <div class="av" id="initiales">—</div>
+      <img class="av" id="photo-profil" src="pp.jpg" alt="Photo de profil" width="34" height="34">
       <div><b id="agent-nom">—</b><span id="agent-role">—</span></div>
     </div>
     <button type="button" class="btn-sortie" data-choix="98">
@@ -73,10 +30,25 @@
   </div>
 </header>
 
-<main>
+<main id="contenu">
+  <div class="fil-page"><span>ESPACE DE TRAVAIL /</span> TABLEAU DE BORD <span id="date-jour" class="date-jour"></span></div>
   <section class="salut">
+    <div class="surtitre">LE TERRAIN, EN PERSPECTIVE</div>
     <h1 id="bonjour">Bonjour</h1>
     <p><span id="perimetre"></span> · <span class="sync"><span class="point" id="point-sync"></span><span id="sync"></span></span></p>
+  </section>
+
+  <section class="mission" aria-label="Avancement et prochaine action">
+    <div class="mission-contenu">
+      <span class="surtitre">CHAQUE STRUCTURE COMPTE</span>
+      <h2>Une collecte précise.<br>Un terrain qui avance.</h2>
+      <p id="mission-description">Retrouvez vos questionnaires et faites avancer la collecte.</p>
+      <button class="mission-action" type="button" id="action-prioritaire" data-choix="1">Ouvrir les questionnaires <span aria-hidden="true">↗</span></button>
+    </div>
+    <div class="mission-progression">
+      <div class="anneau" id="anneau"><div><strong id="progression-valeur">0 %</strong><span>de validation</span></div></div>
+      <p><b id="progression-detail"></b><br><span>structures validées dans votre périmètre</span></p>
+    </div>
   </section>
 
   <section class="avis" id="avis" aria-live="polite"></section>
@@ -84,13 +56,13 @@
   <section class="chiffres" id="chiffres" aria-label="Chiffres clés"></section>
 
   <section>
-    <h2 class="section-t">Que voulez-vous faire ?</h2>
+    <div class="section-entete"><div><span class="surtitre">VOTRE BOÎTE À OUTILS</span><h2 class="section-t">Passer à l’action</h2></div><span class="section-note">Les bons outils, au même endroit.</span></div>
   </section>
   <section class="tuiles" id="tuiles"></section>
 </main>
 
 <footer>
-  <span id="pied">Écrans modernes · ETEC_A V1</span>
+  <span id="pied">ETEC_A · Collecte &amp; qualité</span>
   <button type="button" class="lien" data-choix="99">Passer aux écrans classiques</button>
 </footer>
 
@@ -133,7 +105,6 @@
 
   /* En-tête : l'agent est désigné par son code (SUP001, CTR001, ENQ001…), jamais par le nom enregistré dans le compte */
   var code = String(d.agent || "").trim().toUpperCase();
-  $("initiales").textContent = code.slice(0, 2) || "EU";
   $("agent-nom").textContent = code || "—";
   $("agent-role").textContent = d.roleLibelle || "";
 
@@ -184,6 +155,19 @@
 
   /* Chiffres clés */
   var assign = n(d.assignees), uv = n(d.upiValidees);
+  var progression = Math.max(0, pct(uv, assign));
+  $("progression-valeur").textContent = Math.round(progression) + " %";
+  $("progression-detail").textContent = uv + " / " + assign;
+  $("anneau").style.setProperty("--progression", progression + "%");
+  $("date-jour").textContent = maintenant.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  var attente = role === 4 ? n(d.aApprouver) : n(d.aControler) + (role === 3 ? n(d.aApprouver) : 0);
+  if (role >= 2 && attente > 0) {
+    $("action-prioritaire").setAttribute("data-choix", "8");
+    $("action-prioritaire").innerHTML = 'Ouvrir le contrôle qualité <span aria-hidden="true">↗</span>';
+    $("mission-description").textContent = attente + " questionnaire" + (attente > 1 ? "s attendent" : " attend") + " votre examen. À vous de faire avancer la qualité.";
+  } else if (role === 1 && n(d.aCorriger) > 0) {
+    $("mission-description").textContent = n(d.aCorriger) + " questionnaire(s) à corriger. Reprenez-les avant de poursuivre la collecte.";
+  }
   var ch = [];
   ch.push('<div class="chiffre"><div class="l">' + (role === 1 ? 'Structures assignées' : 'Structures assignées') + '</div><div class="v">' + assign + '</div></div>');
   ch.push('<div class="chiffre"><div class="l">Structures validées</div><div class="v">' + uv + '<small>' + h(d.avancementTxt !== undefined ? d.avancementTxt : (pct(uv, assign).toFixed(2) + ' %').replace('.', ',')) + '</small></div><div class="piste"><i style="width:' + pct(uv, assign) + '%"></i></div></div>');
@@ -201,7 +185,7 @@
 
   /* Tuiles : mêmes options et mêmes droits que le menu classique */
   var tuiles = [];
-  tuiles.push({ c: 1, ic: "collecter", t: "Collecter / Modifier un questionnaire", d: "Ouvrir le questionnaire d'une structure", principale: true });
+  tuiles.push({ c: 1, ic: "collecter", t: "Collecter / Modifier un questionnaire", d: "Ouvrir le questionnaire d'une structure", principale: false });
   tuiles.push({ c: 2, ic: "assignations", t: "Voir mes assignations", d: role === 1 ? "Mes structures et leur état" : role === 2 ? "Les zones et les structures de mon équipe" : "Les assignations de mon périmètre" });
   tuiles.push({ c: 3, ic: "bilan", t: "Suivi / Bilan", d: role === 1 ? "Mon bilan en chiffres" : "Bilans, graphiques et classement" });
   tuiles.push({ c: 4, ic: "sync", t: "Synchroniser", d: "Envoyer et recevoir les données" });
@@ -229,7 +213,7 @@
     ETEC.fermer(el.getAttribute("data-choix"));
   });
 
-  var premiere = document.querySelector(".tuile.principale");
+  var premiere = document.getElementById("action-prioritaire");
   if (premiere) { try { premiere.focus({ preventScroll: true }); } catch (e) { premiere.focus(); } }
 })();
 </script>
